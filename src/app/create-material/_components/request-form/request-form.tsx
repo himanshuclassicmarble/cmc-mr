@@ -22,9 +22,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { number } from "zod/v3";
 
 const formSchema = z.object({
-  materialCode: z.int().optional(),
+  materialCode: z
+    .string()
+    .regex(/^\d{6}$/, { message: "Must be exactly 6 digits" }),
   materialType: z.enum(["abc", "xyz"]),
   materialGroup: z.enum(["sm", "large"]),
   buom: z.enum(["kg", "M", "L"]),
@@ -34,7 +37,7 @@ export default function RequestForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      materialCode: undefined,
+      materialCode: "",
       materialType: undefined,
       materialGroup: undefined,
       buom: undefined,
@@ -51,19 +54,19 @@ export default function RequestForm() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          className="space-y-4 md:space-y-8 "
+          className="space-y-4 md:space-y-6 "
         >
-          <div className="md:flex flex-row space-y-4  md:space-y-0 gap-4">
+          <div className="grid md:flex flex-row gap-4 space-y-0 ">
             <FormField
               control={form.control}
               name="materialCode"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="w-full md:w-3/4">
                   <FormLabel>Material Code</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Material Code"
-                      type="interger"
+                      type="number"
                       {...field}
                     />
                   </FormControl>
@@ -76,7 +79,7 @@ export default function RequestForm() {
               control={form.control}
               name="materialType"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className=" md:w-1/4 ">
                   <FormLabel>Material Type</FormLabel>
                   <FormControl>
                     <Select onValueChange={field.onChange} value={field.value}>
@@ -95,12 +98,12 @@ export default function RequestForm() {
               )}
             />
           </div>
-          <div className="md:flex flex-row space-y-4 md:space-y-0 gap-4">
+          <div className="grid md:flex flex-row gap-4 ">
             <FormField
               control={form.control}
               name="materialGroup"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className=" md:w-1/2 ">
                   <FormLabel>Material Group</FormLabel>
                   <FormControl>
                     <Select onValueChange={field.onChange} value={field.value}>
@@ -123,11 +126,11 @@ export default function RequestForm() {
               control={form.control}
               name="buom"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className=" md:w-1/2 ">
                   <FormLabel>Base Unit of Measure</FormLabel>
                   <FormControl>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full ">
                         <SelectValue placeholder="Select Base Unit of Measure " />
                       </SelectTrigger>
 
@@ -148,7 +151,7 @@ export default function RequestForm() {
             control={form.control}
             name="materialDescription"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Material Description</FormLabel>
                 <FormControl>
                   <Textarea placeholder="Material Description" {...field} />
@@ -157,11 +160,11 @@ export default function RequestForm() {
               </FormItem>
             )}
           />
-          <div className="flex flex-row gap-2">
-            <Button type="submit" className="flex-1 md:flex-none">
+          <div className="flex flex-row gap-2 md:justify-center items-center">
+            <Button type="submit" className="flex-1 md:flex-none md:w-40">
               Submit
             </Button>
-            <Button variant="outline" className="flex-1 md:flex-none">
+            <Button variant="outline" className="flex-1  md:flex-none md:w-40">
               Cancel
             </Button>
           </div>

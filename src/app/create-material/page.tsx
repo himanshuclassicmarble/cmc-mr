@@ -3,8 +3,10 @@ import RequestForm from "./_components/request-form/request-form";
 
 function page() {
   return (
-    <div>
-      <RequestForm />
+    <div className="w-full max-w-7xl h-full">
+      <div className="w-full">
+        <RequestForm />
+      </div>
     </div>
   );
 }
