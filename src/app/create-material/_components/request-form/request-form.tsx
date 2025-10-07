@@ -1,8 +1,9 @@
 "use client";
 import React from "react";
-import * as z from "zod";
-
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { formSchema, FormSchema } from "./schema";
+
 import {
   Form,
   FormControl,
@@ -12,7 +13,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -22,19 +22,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { number } from "zod/v3";
+import { Card } from "@/components/ui/card";
 
-const formSchema = z.object({
-  materialCode: z
-    .string()
-    .regex(/^\d{6}$/, { message: "Must be exactly 6 digits" }),
-  materialType: z.enum(["abc", "xyz"]),
-  materialGroup: z.enum(["sm", "large"]),
-  buom: z.enum(["kg", "M", "L"]),
-  materialDescription: z.string().min(5).max(50),
-});
 export default function RequestForm() {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       materialCode: "",
@@ -44,24 +35,39 @@ export default function RequestForm() {
       materialDescription: "",
     },
   });
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log({ values });
-    alert("check in console");
+
+  const handleSubmit = (values: FormSchema) => {
+    console.log("Form Values:", values);
+    alert("form triggered");
+    form.reset({
+      materialCode: "",
+      materialType: undefined,
+      materialGroup: undefined,
+      buom: undefined,
+      materialDescription: "",
+    });
+  };
+
+  const handleCancel = () => {
+    form.reset({
+      materialCode: "",
+      materialType: undefined,
+      materialGroup: undefined,
+      buom: undefined,
+      materialDescription: "",
+    });
   };
 
   return (
-    <div className="px-4 py-6">
+    <Card className="px-4 py-6">
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(handleSubmit)}
-          className="space-y-4 md:space-y-6 "
-        >
-          <div className="grid md:flex flex-row gap-4 space-y-0 ">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <div className="flex flex-col md:flex-row gap-4">
             <FormField
               control={form.control}
               name="materialCode"
               render={({ field }) => (
-                <FormItem className="w-full md:w-3/4">
+                <FormItem className="md:w-3/4">
                   <FormLabel>Material Code</FormLabel>
                   <FormControl>
                     <Input
@@ -74,19 +80,20 @@ export default function RequestForm() {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="materialType"
               render={({ field }) => (
-                <FormItem className=" md:w-1/4 ">
+                <FormItem className="flex-1">
                   <FormLabel>Material Type</FormLabel>
                   <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Material Type " />
+                        <SelectValue placeholder="Select Material Type" />
                       </SelectTrigger>
-
                       <SelectContent>
                         <SelectItem value="abc">abc</SelectItem>
                         <SelectItem value="xyz">xyz</SelectItem>
@@ -98,19 +105,22 @@ export default function RequestForm() {
               )}
             />
           </div>
-          <div className="grid md:flex flex-row gap-4 ">
+
+          <div className="grid md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="materialGroup"
               render={({ field }) => (
-                <FormItem className=" md:w-1/2 ">
+                <FormItem className="flex-1">
                   <FormLabel>Material Group</FormLabel>
                   <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Material Group " />
+                        <SelectValue placeholder="Select Material Group" />
                       </SelectTrigger>
-
                       <SelectContent>
                         <SelectItem value="sm">sm</SelectItem>
                         <SelectItem value="large">large</SelectItem>
@@ -121,19 +131,20 @@ export default function RequestForm() {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="buom"
               render={({ field }) => (
-                <FormItem className=" md:w-1/2 ">
+                <FormItem className="flex-1">
                   <FormLabel>Base Unit of Measure</FormLabel>
                   <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="w-full ">
-                        <SelectValue placeholder="Select Base Unit of Measure " />
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Unit" />
                       </SelectTrigger>
-
                       <SelectContent>
                         <SelectItem value="kg">kg</SelectItem>
                         <SelectItem value="L">L</SelectItem>
@@ -151,7 +162,7 @@ export default function RequestForm() {
             control={form.control}
             name="materialDescription"
             render={({ field }) => (
-              <FormItem className="w-full">
+              <FormItem>
                 <FormLabel>Material Description</FormLabel>
                 <FormControl>
                   <Textarea placeholder="Material Description" {...field} />
@@ -160,16 +171,21 @@ export default function RequestForm() {
               </FormItem>
             )}
           />
-          <div className="flex flex-row gap-2 md:justify-center items-center">
-            <Button type="submit" className="flex-1 md:flex-none md:w-40">
+
+          <div className="flex flex-col md:flex-row gap-2 justify-center">
+            <Button type="submit" className="md:w-40">
               Submit
             </Button>
-            <Button variant="outline" className="flex-1  md:flex-none md:w-40">
+            <Button
+              variant="outline"
+              className="md:w-40"
+              onClick={handleCancel}
+            >
               Cancel
             </Button>
           </div>
         </form>
       </Form>
-    </div>
+    </Card>
   );
 }
