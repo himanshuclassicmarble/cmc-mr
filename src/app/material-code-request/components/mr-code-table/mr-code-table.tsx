@@ -11,25 +11,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Trash } from "lucide-react";
-import { MaterialRateItem } from "./types";
+import { MaterialCodeItem } from "./types";
 import { toast } from "sonner";
 
-interface MRRateTableProps {
-  items?: MaterialRateItem[];
+interface MRCodeTableProps {
+  items?: MaterialCodeItem[];
 }
 
-export default function MRRateTable({ items = [] }: MRRateTableProps) {
+export default function MRCodeTable({ items = [] }: MRCodeTableProps) {
   const [editableItems, setEditableItems] = useState(items);
 
   const handleChange = (
     index: number,
-    field: keyof MaterialRateItem,
+    field: keyof MaterialCodeItem,
     value: string | number
   ) => {
     setEditableItems((prev) =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
   };
+
   const handleSubmit = () => {
     console.log(editableItems);
     toast("Successfully Requested.");
@@ -44,11 +45,8 @@ export default function MRRateTable({ items = [] }: MRRateTableProps) {
             <TableRow>
               <TableHead className="w-32">Req Id</TableHead>
               <TableHead className="w-20">Sr.No</TableHead>
-              <TableHead className="w-30">Item Code</TableHead>
               <TableHead className="w-90">Details</TableHead>
-              <TableHead className="w-40">Qty Required</TableHead>
               <TableHead className="w-20">UOM</TableHead>
-              <TableHead className="w-90">Purpose</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -76,15 +74,7 @@ export default function MRRateTable({ items = [] }: MRRateTableProps) {
                       readOnly
                     />
                   </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={item.itemCode ?? ""}
-                      onChange={(e) =>
-                        handleChange(index, "itemCode", e.target.value)
-                      }
-                    />
-                  </TableCell>
+
                   <TableCell>
                     <Input
                       type="text"
@@ -94,19 +84,7 @@ export default function MRRateTable({ items = [] }: MRRateTableProps) {
                       }
                     />
                   </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={item.quantityRequired ?? ""}
-                      onChange={(e) =>
-                        handleChange(
-                          index,
-                          "quantityRequired",
-                          Number(e.target.value)
-                        )
-                      }
-                    />
-                  </TableCell>
+
                   <TableCell>
                     <Input
                       type="text"
@@ -114,15 +92,7 @@ export default function MRRateTable({ items = [] }: MRRateTableProps) {
                       readOnly
                     />
                   </TableCell>
-                  <TableCell>
-                    <Input
-                      type="text"
-                      value={item.purpose ?? ""}
-                      onChange={(e) =>
-                        handleChange(index, "purpose", e.target.value)
-                      }
-                    />
-                  </TableCell>
+
                   <TableCell>
                     <Button size="icon" variant="outline">
                       <Trash />
