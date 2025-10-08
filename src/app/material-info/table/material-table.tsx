@@ -43,7 +43,6 @@ export default function MaterialTable() {
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
     data: materialData,
@@ -53,13 +52,11 @@ export default function MaterialTable() {
       sorting,
       columnFilters,
       columnVisibility,
-      rowSelection,
     },
     onGlobalFilterChange: setGlobalFilter,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -129,12 +126,7 @@ export default function MaterialTable() {
             <TableBody>
               {table.getRowModel().rows.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className="cursor-pointer"
-                    onClick={() => row.toggleSelected(!row.getIsSelected())}
-                  >
+                  <TableRow key={row.id} className="cursor-pointer">
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
@@ -165,18 +157,6 @@ export default function MaterialTable() {
 
         {/* Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-border">
-          {/* Selection info */}
-          <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">
-              {table.getFilteredSelectedRowModel().rows.length}
-            </span>{" "}
-            of{" "}
-            <span className="font-medium text-foreground">
-              {table.getFilteredRowModel().rows.length}
-            </span>{" "}
-            row(s) selected
-          </div>
-
           {/* Pagination controls */}
           <div className="flex items-center gap-6">
             {/* Page info */}
