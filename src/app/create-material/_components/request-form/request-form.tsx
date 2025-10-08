@@ -40,7 +40,14 @@ export default function RequestForm() {
 
   const handleSubmit = (values: FormSchema) => {
     console.log("Form Values:", values);
-    toast("Form Successfully Submitted.");
+
+    // ✅ Show success toast
+    toast.success("✅ Form Successfully Submitted!", {
+      description: "Your material request has been recorded.",
+      duration: 3000,
+    });
+
+    // Reset form after submission
     form.reset({
       materialCode: "",
       materialType: undefined,
@@ -57,6 +64,12 @@ export default function RequestForm() {
       materialGroup: undefined,
       buom: undefined,
       materialDescription: "",
+    });
+
+    // Optional cancel toast
+    toast("Form cleared.", {
+      description: "All fields have been reset.",
+      duration: 2500,
     });
   };
 
@@ -189,6 +202,7 @@ export default function RequestForm() {
             <Button
               variant="outline"
               className="md:w-40"
+              type="button"
               onClick={handleCancel}
             >
               Cancel

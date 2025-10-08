@@ -1,5 +1,5 @@
 export type MaterialData = {
-  material: number;
+  material: string;
   materialType: string;
   materialGroup: string;
   buom: string;
