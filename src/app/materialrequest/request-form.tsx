@@ -1,10 +1,8 @@
 "use client";
 import React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { formSchema, FormSchema } from "./schema";
-import { toast } from "sonner";
+import * as z from "zod";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
@@ -14,6 +12,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -23,11 +22,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
-import { buomConst, materialGroupConst, materialTypeConst } from "./constants";
 
+const formSchema = z.object({
+  materialCode: z
+    .string()
+    .regex(/^\d{8}$/, { message: "Must be exactly 8 digits" }),
+  materialType: z.enum(["abc", "xyz"]),
+  materialGroup: z.enum(["sm", "large"]),
+  buom: z.enum(["kg", "M", "L"]),
+  materialDescription: z.string().min(5).max(50),
+});
 export default function RequestForm() {
-  const form = useForm<FormSchema>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       materialCode: "",
@@ -37,10 +43,8 @@ export default function RequestForm() {
       materialDescription: "",
     },
   });
-
-  const handleSubmit = (values: FormSchema) => {
-    console.log("Form Values:", values);
-    toast("Form Successfully Submitted.");
+  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+    console.log({ values });
     form.reset({
       materialCode: "",
       materialType: undefined,
@@ -61,15 +65,18 @@ export default function RequestForm() {
   };
 
   return (
-    <Card className="w-full h-full p-3 shadow-none">
+    <div className="px-4 py-6 ">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          <div className="flex flex-col md:flex-row gap-4">
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-4 md:space-y-6 p-4 border border-border rounded-3xl "
+        >
+          <div className="grid md:flex flex-row gap-4 space-y-0 ">
             <FormField
               control={form.control}
               name="materialCode"
               render={({ field }) => (
-                <FormItem className="md:w-3/4">
+                <FormItem className=" md:w-3/4">
                   <FormLabel>Material Code</FormLabel>
                   <FormControl>
                     <Input
@@ -82,26 +89,25 @@ export default function RequestForm() {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="materialType"
               render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Type</FormLabel>
+                <FormItem className="md:w-1/4">
+                  <FormLabel>Material Type</FormLabel>
                   <FormControl>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value || ""}
                     >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Material Type" />
+                      <SelectTrigger className="w-full ">
+                        <SelectValue placeholder="Select Material Type " />
                       </SelectTrigger>
+
                       <SelectContent>
-                        {materialTypeConst.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type.toUpperCase()}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="abc">abc</SelectItem>
+                        <SelectItem value="xyz">xyz</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -110,28 +116,25 @@ export default function RequestForm() {
               )}
             />
           </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:flex flex-row gap-4 ">
             <FormField
               control={form.control}
               name="materialGroup"
               render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>Group</FormLabel>
+                <FormItem className=" md:w-1/2 ">
+                  <FormLabel>Material Group</FormLabel>
                   <FormControl>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value || ""}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Material Group" />
+                        <SelectValue placeholder="Select Material Group " />
                       </SelectTrigger>
+
                       <SelectContent>
-                        {materialGroupConst.map((group) => (
-                          <SelectItem key={group} value={group}>
-                            {group.toUpperCase()}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="sm">sm</SelectItem>
+                        <SelectItem value="large">large</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -139,26 +142,26 @@ export default function RequestForm() {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="buom"
               render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>BUOM</FormLabel>
+                <FormItem className=" md:w-1/2 ">
+                  <FormLabel>Base Unit of Measure</FormLabel>
                   <FormControl>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value || ""}
                     >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Unit" />
+                      <SelectTrigger className="w-full ">
+                        <SelectValue placeholder="Select Base Unit of Measure " />
                       </SelectTrigger>
+
                       <SelectContent>
-                        {buomConst.map((unit) => (
-                          <SelectItem key={unit} value={unit}>
-                            {unit.toUpperCase()}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="L">L</SelectItem>
+                        <SelectItem value="M">M</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -172,8 +175,8 @@ export default function RequestForm() {
             control={form.control}
             name="materialDescription"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
+              <FormItem className="w-full">
+                <FormLabel>Material Description</FormLabel>
                 <FormControl>
                   <Textarea placeholder="Material Description" {...field} />
                 </FormControl>
@@ -181,14 +184,13 @@ export default function RequestForm() {
               </FormItem>
             )}
           />
-
-          <div className="flex flex-col md:flex-row gap-2 justify-center">
-            <Button type="submit" className="md:w-40">
+          <div className="flex flex-row gap-2 md:justify-center items-center">
+            <Button type="submit" className="flex-1 md:flex-none md:w-40">
               Submit
             </Button>
             <Button
               variant="outline"
-              className="md:w-40"
+              className="flex-1  md:flex-none md:w-40"
               onClick={handleCancel}
             >
               Cancel
@@ -196,6 +198,6 @@ export default function RequestForm() {
           </div>
         </form>
       </Form>
-    </Card>
+    </div>
   );
 }
