@@ -32,6 +32,8 @@ import {
 import { Card } from "@/components/ui/card";
 import { columns } from "./columns";
 import { materialData } from "../data";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ChevronLeft, ChevronRight, Columns3 } from "lucide-react";
 
 export default function MaterialTable() {
   const [globalFilter, setGlobalFilter] = React.useState("");
@@ -65,124 +67,152 @@ export default function MaterialTable() {
   });
 
   return (
-    <Card className="w-full h-full p-4 rounded-xl shadow-md bg-white">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
-        <Input
-          placeholder="Search materials..."
-          value={globalFilter ?? ""}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          className="max-w-sm"
-        />
+    <Card className="w-full h-full p-4 border-border bg-card">
+      <div className="space-y-4">
+        {/* Header Controls */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <Input
+            placeholder="Search materials..."
+            value={globalFilter ?? ""}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            className="flex-1 max-w-sm bg-background"
+          />
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto sm:ml-0">
-              Columns
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((col) => col.getCanHide())
-              .map((col) => (
-                <DropdownMenuCheckboxItem
-                  key={col.id}
-                  checked={col.getIsVisible()}
-                  onCheckedChange={(value) => col.toggleVisibility(!!value)}
-                >
-                  {col.id}
-                </DropdownMenuCheckboxItem>
-              ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      <div className="overflow-hidden rounded-lg border border-border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="bg-primary/10">
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="text-center font-semibold tracking-wide py-2 border-b border-border"
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="sm:ml-auto gap-2">
+                <Columns3 className="h-4 w-4" />
+                Columns
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {table
+                .getAllColumns()
+                .filter((col) => col.getCanHide())
+                .map((col) => (
+                  <DropdownMenuCheckboxItem
+                    key={col.id}
+                    checked={col.getIsVisible()}
+                    onCheckedChange={(value) => col.toggleVisibility(!!value)}
+                    className="capitalize"
                   >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
+                    {col.id}
+                  </DropdownMenuCheckboxItem>
                 ))}
-              </TableRow>
-            ))}
-          </TableHeader>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className={`transition-colors hover:bg-muted/50 cursor-pointer ${
-                    row.getIsSelected() ? "bg-muted" : ""
-                  }`}
-                  onClick={() => row.toggleSelected(!row.getIsSelected())}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="py-2 px-3 border-b border-border"
+        {/* Table with ScrollArea */}
+        <ScrollArea className="w-[330px] md:w-[750px] lg:w-full rounded-md border border-border whitespace-nowrap">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="hover:bg-muted/50">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className="text-center font-semibold bg-muted/50 h-12 border-b border-border"
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  No materials found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableHeader>
 
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mt-4 text-sm">
-        <span className="text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected
-        </span>
-        <span>
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
-        </span>
+            <TableBody>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="cursor-pointer"
+                    onClick={() => row.toggleSelected(!row.getIsSelected())}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className="py-3 px-4 border-b border-border"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-32 text-center text-muted-foreground"
+                  >
+                    No materials found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
 
-        <div className="flex gap-2 items-center">
-          <Button
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
+        {/* Footer */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-border">
+          {/* Selection info */}
+          <div className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">
+              {table.getFilteredSelectedRowModel().rows.length}
+            </span>{" "}
+            of{" "}
+            <span className="font-medium text-foreground">
+              {table.getFilteredRowModel().rows.length}
+            </span>{" "}
+            row(s) selected
+          </div>
 
-          <Button
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
+          {/* Pagination controls */}
+          <div className="flex items-center gap-6">
+            {/* Page info */}
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              Page{" "}
+              <span className="font-medium text-foreground">
+                {table.getState().pagination.pageIndex + 1}
+              </span>{" "}
+              of{" "}
+              <span className="font-medium text-foreground">
+                {table.getPageCount()}
+              </span>
+            </span>
+
+            {/* Navigation buttons */}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="sr-only">Previous page</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                <ChevronRight className="h-4 w-4" />
+                <span className="sr-only">Next page</span>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </Card>

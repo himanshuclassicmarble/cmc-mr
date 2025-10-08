@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
+import { buomConst, materialGroupConst, materialTypeConst } from "./constants";
 
 export default function RequestForm() {
   const form = useForm<FormSchema>({
@@ -59,7 +60,7 @@ export default function RequestForm() {
   };
 
   return (
-    <Card className="px-4 py-6">
+    <Card className="w-full h-full p-3 shadow-none">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="flex flex-col md:flex-row gap-4">
@@ -85,7 +86,7 @@ export default function RequestForm() {
               name="materialType"
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel>Material Type</FormLabel>
+                  <FormLabel>Type</FormLabel>
                   <FormControl>
                     <Select
                       onValueChange={field.onChange}
@@ -95,8 +96,11 @@ export default function RequestForm() {
                         <SelectValue placeholder="Select Material Type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="abc">abc</SelectItem>
-                        <SelectItem value="xyz">xyz</SelectItem>
+                        {materialTypeConst.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type.toUpperCase()}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -112,7 +116,7 @@ export default function RequestForm() {
               name="materialGroup"
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel>Material Group</FormLabel>
+                  <FormLabel>Group</FormLabel>
                   <FormControl>
                     <Select
                       onValueChange={field.onChange}
@@ -122,8 +126,11 @@ export default function RequestForm() {
                         <SelectValue placeholder="Select Material Group" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="sm">sm</SelectItem>
-                        <SelectItem value="large">large</SelectItem>
+                        {materialGroupConst.map((group) => (
+                          <SelectItem key={group} value={group}>
+                            {group.toUpperCase()}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -136,7 +143,7 @@ export default function RequestForm() {
               name="buom"
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel>Base Unit of Measure</FormLabel>
+                  <FormLabel>BUOM</FormLabel>
                   <FormControl>
                     <Select
                       onValueChange={field.onChange}
@@ -146,9 +153,11 @@ export default function RequestForm() {
                         <SelectValue placeholder="Select Unit" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="kg">kg</SelectItem>
-                        <SelectItem value="L">L</SelectItem>
-                        <SelectItem value="M">M</SelectItem>
+                        {buomConst.map((unit) => (
+                          <SelectItem key={unit} value={unit}>
+                            {unit.toUpperCase()}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -163,7 +172,7 @@ export default function RequestForm() {
             name="materialDescription"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Material Description</FormLabel>
+                <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Textarea placeholder="Material Description" {...field} />
                 </FormControl>
