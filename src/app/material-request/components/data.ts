@@ -1,6 +1,6 @@
-import { MaterialRateRequestData } from "./types";
+import { MaterialRequestData } from "./types";
 
-export const materialRateRequest: MaterialRateRequestData = {
+export const materialRequest: MaterialRequestData = {
   requesterEmail: "rajiv.sharma@company.com",
   plantName: "Mumbai Plant",
   headOfDepartment: "Amit Verma",

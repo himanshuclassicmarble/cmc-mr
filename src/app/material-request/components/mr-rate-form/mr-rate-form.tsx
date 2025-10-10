@@ -1,10 +1,10 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MaterialRateRequestor } from "./types";
+import { MaterialRequestor } from "./types";
 
 interface MRRateFormProps {
-  data: MaterialRateRequestor;
+  data: MaterialRequestor;
 }
 
 export default function MRRateForm({ data }: MRRateFormProps) {
