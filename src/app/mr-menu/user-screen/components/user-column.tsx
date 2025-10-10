@@ -1,10 +1,11 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { UserData } from "./types";
 import { Delete, Edit, Pencil, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { UserData } from "../types";
+import UserEditForm from "./user-form/user-edit-form";
 
-export const columns: ColumnDef<UserData>[] = [
+export const userColumns: ColumnDef<UserData>[] = [
   {
     accessorKey: "userId",
     header: "UserId ",
@@ -49,9 +50,7 @@ export const columns: ColumnDef<UserData>[] = [
       const Action = row.original;
       return (
         <div className="flex flex-row gap-2">
-          <Button className="size-8 rounded-full" variant="outline" size="icon">
-            <Pencil />
-          </Button>
+          <UserEditForm />
           <Button
             className="size-8 rounded-full"
             variant="destructive"

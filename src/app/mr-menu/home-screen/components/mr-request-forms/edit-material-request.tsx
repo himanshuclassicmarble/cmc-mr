@@ -143,10 +143,14 @@ export function EditMaterialRequest() {
             />
 
             <DialogFooter>
+              <Button type="submit" className="md:w-40">
+                Save
+              </Button>
               <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
+                <Button className="md:w-40" variant="outline">
+                  Cancel
+                </Button>
               </DialogClose>
-              <Button type="submit">Save</Button>
             </DialogFooter>
           </form>
         </Form>

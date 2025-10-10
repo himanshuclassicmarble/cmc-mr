@@ -13,19 +13,19 @@ import { Separator } from "@/components/ui/separator";
 export default function HomePage() {
   const routes = [
     {
-      title: "Create Material",
-      description: "Add new materials to the system.",
-      href: "/create-material",
+      title: "Home Screen",
+      description: "List the Material Request",
+      href: "/mr-menu/home-screen",
     },
     {
-      title: "Material Info",
-      description: "View and manage existing material information.",
-      href: "/material-info",
+      title: "Material Master",
+      description: "View and manage existing material master.",
+      href: "/mr-menu/material-master",
     },
     {
-      title: "Material Request",
-      description: "Submit a request for new material.",
-      href: "/material-request",
+      title: "User Screen",
+      description: "List and Create User.",
+      href: "/mr-menu/user-screen",
     },
   ];
 
@@ -43,7 +43,7 @@ export default function HomePage() {
       </div>
 
       {/* Grid of Links */}
-      <div className="grid w-full max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid w-full max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
         {routes.map((route) => (
           <Link
             href={route.href}

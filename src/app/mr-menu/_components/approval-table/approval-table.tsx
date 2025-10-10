@@ -74,17 +74,24 @@ export default function MasterTable<TData>({
   return (
     <div className="space-y-4">
       {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <Input
-          placeholder="Search..."
-          value={globalFilter ?? ""}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          className="flex-1 max-w-sm bg-background"
-        />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full">
+        {/* Search Input */}
+        <div className="flex-1 max-w-sm">
+          <Input
+            placeholder="Search..."
+            value={globalFilter ?? ""}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            className="w-full bg-background"
+          />
+        </div>
 
+        {/* Column Visibility Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="sm:ml-auto gap-2">
+            <Button
+              variant="outline"
+              className="flex items-center gap-2 sm:ml-auto"
+            >
               <Columns3 className="h-4 w-4" />
               Columns
             </Button>
@@ -105,13 +112,10 @@ export default function MasterTable<TData>({
               ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        {component && (
-          <React.Fragment key="create-material-request">
-            {component}
-          </React.Fragment>
-        )}
-      </div>
 
+        {/* Custom Component */}
+        {component && <div className="mt-2 sm:mt-0">{component}</div>}
+      </div>
       <ScrollArea className="w-[330px] md:w-[750px] lg:w-full rounded-md border border-border whitespace-nowrap">
         <Table>
           <TableHeader>
