@@ -8,23 +8,9 @@ export const userData : UserData[]= [
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-     {
-      userId: "abc@gmail.com",
-      userName: "jom",
-      empCode: "1234",
-      department: ["It"],
-      plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-     {
-      userId: "abc@gmail.com",
-      userName: "jom",
-      empCode: "1234",
-      department: ["It"],
-      plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: false
     },
     {
       userId: "abc@gmail.com",
@@ -32,118 +18,134 @@ export const userData : UserData[]= [
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-     {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-     {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-    {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-     {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-     {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-    {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-     {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-     {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-    {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-     {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-    {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-     {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-    {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    },
-     {
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    }, {
       userId: "abc@gmail.com",
       userName: "jom",
       empCode: "1234",
       department: ["It"],
       plant: ["Unit1-1100"],
-      hod:  "abcdef@gmail.com",
-    }
+       role: ['User'],
+        hod:  "abcdef@gmail.com",
+      isActive: true
+    },
 ];

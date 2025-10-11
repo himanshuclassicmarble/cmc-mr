@@ -4,6 +4,7 @@ import { Delete, Edit, Pencil, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserData } from "../types";
 import UserEditForm from "./user-form/user-edit-form";
+import { Badge } from "@/components/ui/badge";
 
 export const userColumns: ColumnDef<UserData>[] = [
   {
@@ -38,9 +39,32 @@ export const userColumns: ColumnDef<UserData>[] = [
     cell: ({ row }) => <div>{row.getValue("plant")}</div>,
   },
   {
+    accessorKey: "role",
+    header: "Role",
+    cell: ({ row }) => <div>{row.getValue("role")}</div>,
+  },
+  {
     accessorKey: "hod",
     header: "HOD",
     cell: ({ row }) => <div>{row.getValue("hod")}</div>,
+  },
+  {
+    accessorKey: "isActive",
+    header: "IsActive",
+    cell: ({ row }) => {
+      const active = row.getValue("isActive") as boolean;
+      return (
+        <Badge
+          className={`w-16 ${
+            active
+              ? "bg-green-600 text-secondary"
+              : "bg-destructive text-secondary"
+          } px-2 py-1 rounded-full text-xs`}
+        >
+          {active ? "Active" : "Inactive"}
+        </Badge>
+      );
+    },
   },
 
   {

@@ -31,10 +31,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { formSchema } from "../schema";
 import * as z from "zod";
-import { departmentConst, plantConst } from "../constants";
+import { departmentConst, plantConst, roleConst } from "../constants";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Pencil } from "lucide-react";
 
-export default function UserEditForm() {
+export default function UserCreateForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -43,7 +45,8 @@ export default function UserEditForm() {
       empCode: "",
       department: undefined,
       plant: undefined,
-      hod: "",
+      role: undefined,
+      isActive: false,
     },
   });
 
@@ -174,21 +177,59 @@ export default function UserEditForm() {
               />
             </div>
 
-            {/* HOD */}
-            <FormField
-              control={form.control}
-              name="hod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>HOD</FormLabel>
-                  <FormControl>
-                    <Input placeholder="HOD email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* ROLE */}
+            <div className="flex flex-row gap-4">
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Role</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger className="flex-1 w-full">
+                          <SelectValue placeholder="Select Role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {roleConst.map((r) => (
+                            <SelectItem value={r} key={r}>
+                              {r}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
+              {/* ACTIVE STATUS */}
+
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="w-2/4 flex flex-row ">
+                    <FormControl>
+                      <div className="flex items-center  space-x-2 pt-5">
+                        <FormLabel className="p-0 m-0">IsActive</FormLabel>
+                        <Switch
+                          id="IsActive"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className=""
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             {/* Buttons */}
             <DialogFooter className="flex flex-col sm:flex-row gap-2">
               <Button type="submit" className="md:w-40">

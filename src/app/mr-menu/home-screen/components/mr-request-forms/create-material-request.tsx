@@ -24,6 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { materialRateSchema, MaterialRateFormValues } from "./schema";
+import { Plus } from "lucide-react";
 
 export function CreateMaterialRequest() {
   const form = useForm<MaterialRateFormValues>({
@@ -33,7 +34,7 @@ export function CreateMaterialRequest() {
       serialNumber: undefined,
       itemCode: "",
       details: "",
-      quantityRequired: 1,
+      quantityRequired: 0,
       unitOfMeasurement: "",
       purpose: "",
     },
@@ -54,91 +55,98 @@ export function CreateMaterialRequest() {
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Create Material Request</DialogTitle>
-          <DialogDescription>
-            Fill in material details and click save.
-          </DialogDescription>
+          <DialogDescription></DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Item Code */}
-            <FormField
-              control={form.control}
-              name="itemCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Item Code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter Item Code" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex flex-row gap-2 w-full">
+              {/* Item Code */}
+              <FormField
+                control={form.control}
+                name="itemCode"
+                render={({ field }) => (
+                  <FormItem className="w-32">
+                    <FormLabel>Item Code</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter Item Code" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Details (Optional) */}
-            <FormField
-              control={form.control}
-              name="details"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Details</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter Details" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              {/* Details (Optional) */}
+              <FormField
+                control={form.control}
+                name="details"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Details</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter Details" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="flex flex-row gap-2 w-full">
+              {/* Quantity Required */}
+              <FormField
+                control={form.control}
+                name="quantityRequired"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Quantity Required</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Quantity Required */}
-            <FormField
-              control={form.control}
-              name="quantityRequired"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quantity Required</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              {/* Unit of Measurement (Optional) */}
+              <FormField
+                control={form.control}
+                name="unitOfMeasurement"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Unit of Measurement</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., kg, pcs" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-            {/* Unit of Measurement (Optional) */}
-            <FormField
-              control={form.control}
-              name="unitOfMeasurement"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Unit of Measurement</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., kg, pcs" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex flex-row justify-between items-end gap-2">
+              {/* Purpose */}
+              <FormField
+                control={form.control}
+                name="purpose"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Purpose</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter Purpose" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Purpose */}
-            <FormField
-              control={form.control}
-              name="purpose"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Purpose</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter Purpose" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <Button className="">
+                <Plus className="" />
+              </Button>
+            </div>
 
             <DialogFooter>
               <Button type="submit" className="md:w-40">

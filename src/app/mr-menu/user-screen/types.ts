@@ -6,6 +6,8 @@ export type UserData = {
       empCode: string,
       department: string[],
       plant: string[],
-      hod: string,
+      role: string[],
+      hod:string,
+      isActive: boolean
      
 };

@@ -27,6 +27,7 @@ import { Card } from "@/components/ui/card";
 import { buomConst, materialGroupConst, materialTypeConst } from "./constants";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -42,7 +43,7 @@ export default function MREditForm() {
       materialCode: "",
       materialType: undefined,
       materialGroup: undefined,
-      buom: undefined,
+      uom: undefined,
       materialDescription: "",
     },
   });
@@ -59,7 +60,7 @@ export default function MREditForm() {
       materialCode: "",
       materialType: undefined,
       materialGroup: undefined,
-      buom: undefined,
+      uom: undefined,
       materialDescription: "",
     });
   };
@@ -69,13 +70,8 @@ export default function MREditForm() {
       materialCode: "",
       materialType: undefined,
       materialGroup: undefined,
-      buom: undefined,
+      uom: undefined,
       materialDescription: "",
-    });
-
-    toast("Form cleared.", {
-      description: "All fields have been reset.",
-      duration: 2500,
     });
   };
 
@@ -172,10 +168,10 @@ export default function MREditForm() {
               />
               <FormField
                 control={form.control}
-                name="buom"
+                name="uom"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>BUOM</FormLabel>
+                    <FormLabel>UOM</FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
@@ -217,14 +213,16 @@ export default function MREditForm() {
                 <Button type="submit" className="md:w-40">
                   Submit
                 </Button>
-                <Button
-                  variant="outline"
-                  className="md:w-40"
-                  type="button"
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </Button>
+                <DialogClose asChild>
+                  <Button
+                    variant="outline"
+                    className="md:w-40"
+                    type="button"
+                    onClick={handleCancel}
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
               </div>
             </DialogFooter>
           </form>

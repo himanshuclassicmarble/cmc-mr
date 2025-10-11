@@ -30,9 +30,9 @@ export const materialMasterColumns: ColumnDef<MaterialData>[] = [
     ),
   },
   {
-    accessorKey: "buom",
-    header: "BUOM",
-    cell: ({ row }) => <div>{row.getValue("buom")}</div>,
+    accessorKey: "uom",
+    header: "UOM",
+    cell: ({ row }) => <div>{row.getValue("uom")}</div>,
   },
   {
     accessorKey: "materialDescription",

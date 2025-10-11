@@ -1,7 +1,7 @@
 
 
 import * as z from "zod";
-import { departmentConst, plantConst } from "./constants";
+import { departmentConst, plantConst, roleConst } from "./constants";
 
 export const formSchema = z
   .object({
@@ -13,15 +13,13 @@ export const formSchema = z
     empCode: z.string().min(4 , "Must be 4 digit"),
     department: z.enum(departmentConst ,  "Select Department"),
     plant: z.enum(plantConst ,"Select Plant"),
-    hod: z
-     .string({ message: "required" })
-    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/,{message: "Invalid email format"}),
-  })
-  .refine((data) => data.userId !== data.hod, {
-    message: "UserId and Reporting Manager email cannot be same",
-    path: ["hod"],
+     role: z.enum(roleConst, "Select Role"),
+    isActive: z.boolean()
   });
 
 
   
   export type FormSchema = z.infer<typeof formSchema>;
+
+
+ 

@@ -14,7 +14,7 @@ export const formSchema = z.object({
     required_error: "Material Group is required",
   }),
 
-  buom: z.enum(buomConst, {
+  uom: z.enum(buomConst, {
     required_error: "Base Unit of Measure is required",
   }),
 

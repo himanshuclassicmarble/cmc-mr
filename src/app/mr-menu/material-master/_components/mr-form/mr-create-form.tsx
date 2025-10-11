@@ -33,6 +33,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { DialogClose } from "@radix-ui/react-dialog";
 
 export default function MRCreateForm() {
   const form = useForm<FormSchema>({
@@ -41,7 +42,7 @@ export default function MRCreateForm() {
       materialCode: "",
       materialType: undefined,
       materialGroup: undefined,
-      buom: undefined,
+      uom: undefined,
       materialDescription: "",
     },
   });
@@ -58,7 +59,7 @@ export default function MRCreateForm() {
       materialCode: "",
       materialType: undefined,
       materialGroup: undefined,
-      buom: undefined,
+      uom: undefined,
       materialDescription: "",
     });
   };
@@ -68,13 +69,8 @@ export default function MRCreateForm() {
       materialCode: "",
       materialType: undefined,
       materialGroup: undefined,
-      buom: undefined,
+      uom: undefined,
       materialDescription: "",
-    });
-
-    toast("Form cleared.", {
-      description: "All fields have been reset.",
-      duration: 2500,
     });
   };
 
@@ -169,10 +165,10 @@ export default function MRCreateForm() {
               />
               <FormField
                 control={form.control}
-                name="buom"
+                name="uom"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>BUOM</FormLabel>
+                    <FormLabel>UOM</FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
@@ -214,14 +210,11 @@ export default function MRCreateForm() {
                 <Button type="submit" className="md:w-40">
                   Submit
                 </Button>
-                <Button
-                  variant="outline"
-                  className="md:w-40"
-                  type="button"
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </Button>
+                <DialogClose asChild>
+                  <Button variant="outline" className="md:w-40" type="button">
+                    Cancel
+                  </Button>
+                </DialogClose>
               </div>
             </DialogFooter>
           </form>
