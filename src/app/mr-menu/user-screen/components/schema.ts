@@ -14,12 +14,13 @@ export const formSchema = z
     department: z.enum(departmentConst ,  "Select Department"),
     plant: z.enum(plantConst ,"Select Plant"),
      role: z.enum(roleConst, "Select Role"),
+     hod:z.string(),
     isActive: z.boolean()
   });
 
 
   
-  export type FormSchema = z.infer<typeof formSchema>;
+  export type UserFormSchema = z.infer<typeof formSchema>;
 
 
  

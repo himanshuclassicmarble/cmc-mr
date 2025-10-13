@@ -29,14 +29,17 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { formSchema } from "../schema";
+import { formSchema, UserFormSchema } from "../schema";
 import * as z from "zod";
 import { departmentConst, plantConst, roleConst } from "../constants";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-export default function UserCreateForm() {
-  const form = useForm<z.infer<typeof formSchema>>({
+interface UserTableProps {
+  onAddData: (data: UserFormSchema) => void;
+}
+export default function UserCreateForm({ onAddData }: UserTableProps) {
+  const form = useForm<UserFormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       userId: "",
@@ -49,8 +52,8 @@ export default function UserCreateForm() {
     },
   });
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log({ values });
+  const handleSubmit = (values: UserFormSchema) => {
+    onAddData(values);
     toast("Successfully Submitted.");
     form.reset();
   };
