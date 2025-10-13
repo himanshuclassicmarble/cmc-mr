@@ -2,7 +2,6 @@
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { formSchema, FormSchema } from "./schema";
 import { toast } from "sonner";
 
 import {
@@ -27,17 +26,20 @@ import { Card } from "@/components/ui/card";
 import { buomConst, materialGroupConst, materialTypeConst } from "./constants";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Pencil } from "lucide-react";
+import { DialogClose } from "@radix-ui/react-dialog";
+import { formSchema, MRMasterSchema } from "./schema";
 
-export default function MREditForm() {
-  const form = useForm<FormSchema>({
+interface MRCreateFormProps {
+  onAddData: (data: MRMasterSchema) => void;
+}
+export default function MRCreateForm({ onAddData }: MRCreateFormProps) {
+  const form = useForm<MRMasterSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       materialCode: "",
@@ -48,8 +50,8 @@ export default function MREditForm() {
     },
   });
 
-  const handleSubmit = (values: FormSchema) => {
-    console.log("Form Values:", values);
+  const handleSubmit = (values: MRMasterSchema) => {
+    onAddData(values);
 
     toast.success("Form Successfully Submitted!", {
       description: "Your material request has been recorded.",
@@ -78,9 +80,7 @@ export default function MREditForm() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="size-8 rounded-full" size="sm">
-          <Pencil className="size-4" />
-        </Button>
+        <Button>Create New Material</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -214,12 +214,7 @@ export default function MREditForm() {
                   Submit
                 </Button>
                 <DialogClose asChild>
-                  <Button
-                    variant="outline"
-                    className="md:w-40"
-                    type="button"
-                    onClick={handleCancel}
-                  >
+                  <Button variant="outline" className="md:w-40" type="button">
                     Cancel
                   </Button>
                 </DialogClose>

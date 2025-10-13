@@ -1,5 +1,5 @@
-export type MaterialData = {
-  material: string;
+export type MaterialMaster = {
+  materialCode: string;
   materialType: string;
   materialGroup: string;
   uom: string;

@@ -1,8 +1,7 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { formSchema, FormSchema } from "./schema";
 import { toast } from "sonner";
 
 import {
@@ -23,65 +22,88 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
-import { buomConst, materialGroupConst, materialTypeConst } from "./constants";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { DialogClose } from "@radix-ui/react-dialog";
+import { Pencil } from "lucide-react";
+import { buomConst, materialGroupConst, materialTypeConst } from "./constants";
+import { formSchema, MRMasterSchema } from "./schema";
 
-export default function MRCreateForm() {
-  const form = useForm<FormSchema>({
+interface MREditFormProps {
+  rowData: MRMasterSchema;
+  rowIndex: number;
+  onUpdateData: (updatedRow: MRMasterSchema, rowIndex: number) => void;
+}
+
+export default function MREditForm({
+  rowData,
+  rowIndex,
+  onUpdateData,
+}: MREditFormProps) {
+  const form = useForm<MRMasterSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      materialCode: "",
-      materialType: undefined,
-      materialGroup: undefined,
-      uom: undefined,
-      materialDescription: "",
+      materialCode: rowData.materialCode,
+      materialType: rowData.materialType,
+      materialGroup: rowData.materialGroup,
+      uom: rowData.uom,
+      materialDescription: rowData.materialDescription,
     },
   });
 
-  const handleSubmit = (values: FormSchema) => {
-    console.log("Form Values:", values);
-
-    toast.success("Form Successfully Submitted!", {
-      description: "Your material request has been recorded.",
-      duration: 3000,
-    });
-
+  useEffect(() => {
     form.reset({
-      materialCode: "",
-      materialType: undefined,
-      materialGroup: undefined,
-      uom: undefined,
-      materialDescription: "",
+      materialCode: rowData.materialCode,
+      materialType: rowData.materialType,
+      materialGroup: rowData.materialGroup,
+      uom: rowData.uom,
+      materialDescription: rowData.materialDescription,
+    });
+  }, [rowData]);
+
+  const handleSubmit = (values: MRMasterSchema) => {
+    const updatedRow: MRMasterSchema = {
+      materialCode: values.materialCode,
+      materialType: values.materialType!,
+      materialGroup: values.materialGroup!,
+      uom: values.uom!,
+      materialDescription: values.materialDescription,
+    };
+
+    onUpdateData(updatedRow, rowIndex);
+
+    toast.success("Row updated successfully!", {
+      description: "The material data has been updated.",
+      duration: 3000,
     });
   };
 
   const handleCancel = () => {
     form.reset({
-      materialCode: "",
-      materialType: undefined,
-      materialGroup: undefined,
-      uom: undefined,
-      materialDescription: "",
+      materialCode: rowData.materialCode,
+      materialType: rowData.materialType,
+      materialGroup: rowData.materialGroup,
+      uom: rowData.uom,
+      materialDescription: rowData.materialDescription,
     });
   };
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Create New Material</Button>
+        <Button variant="outline" className="size-8 rounded-full" size="sm">
+          <Pencil className="size-4" />
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Material</DialogTitle>
+          <DialogTitle>Edit Material</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -96,11 +118,7 @@ export default function MRCreateForm() {
                   <FormItem className="md:w-3/4">
                     <FormLabel>Material Code</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Material Code"
-                        type="number"
-                        {...field}
-                      />
+                      <Input type="text" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -199,19 +217,25 @@ export default function MRCreateForm() {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Material Description" {...field} />
+                    <Textarea {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <DialogFooter>
               <div className="flex flex-col md:flex-row gap-2 justify-center">
                 <Button type="submit" className="md:w-40">
-                  Submit
+                  Update
                 </Button>
                 <DialogClose asChild>
-                  <Button variant="outline" className="md:w-40" type="button">
+                  <Button
+                    variant="outline"
+                    className="md:w-40"
+                    type="button"
+                    onClick={handleCancel}
+                  >
                     Cancel
                   </Button>
                 </DialogClose>

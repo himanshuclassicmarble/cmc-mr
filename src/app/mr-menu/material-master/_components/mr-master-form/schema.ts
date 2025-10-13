@@ -21,4 +21,4 @@ export const formSchema = z.object({
   materialDescription: z.string().min(5, "Too short").max(50, "Too long"),
 });
 
-export type FormSchema = z.infer<typeof formSchema>;
+export type MRMasterSchema = z.infer<typeof formSchema>;

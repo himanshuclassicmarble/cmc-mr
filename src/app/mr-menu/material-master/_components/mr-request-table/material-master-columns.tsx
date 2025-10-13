@@ -1,16 +1,18 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { MaterialData } from "../types";
 import { Button } from "@/components/ui/button";
 import { Trash } from "lucide-react";
-import MREditForm from "./mr-form/mr-edit-form";
+import MREditForm from "../mr-master-form/mr-edit-form";
+import { MRMasterSchema } from "../mr-master-form/schema";
 
-export const materialMasterColumns: ColumnDef<MaterialData>[] = [
+export const getMaterialMasterColumns = (
+  onUpdateData: (updatedRow: MRMasterSchema, rowIndex: number) => void,
+): ColumnDef<MRMasterSchema>[] => [
   {
-    accessorKey: "material",
+    accessorKey: "materialCode",
     header: "Material Code ",
     cell: ({ row }) => (
-      <div className="font-medium">{row.getValue("material")}</div>
+      <div className="font-medium">{row.getValue("materialCode")}</div>
     ),
   },
   {
@@ -49,22 +51,21 @@ export const materialMasterColumns: ColumnDef<MaterialData>[] = [
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
-      const data = row.original;
-
-      return (
-        <div className="w-20 flex flex-row gap-2">
-          <MREditForm />
-          <Button
-            variant="destructive"
-            className="size-8 rounded-full"
-            size="sm"
-            onClick={() => console.log("Delete:", data.material)}
-          >
-            <Trash className="size-4" />
-          </Button>
-        </div>
-      );
-    },
+    cell: ({ row }) => (
+      <div className="flex gap-2">
+        <MREditForm
+          rowData={row.original}
+          rowIndex={row.index}
+          onUpdateData={onUpdateData}
+        />
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => console.log("Delete:", row.original.materialCode)}
+        >
+          <Trash />
+        </Button>
+      </div>
+    ),
   },
 ];
