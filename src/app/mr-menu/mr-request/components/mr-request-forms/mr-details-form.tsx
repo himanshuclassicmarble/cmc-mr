@@ -34,7 +34,7 @@ interface ComboboxProps {
 }
 
 export function Combobox({
-  options,
+  options = [],
   value,
   onValueChange,
   placeholder = "Select option...",
@@ -45,7 +45,9 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
 
-  const selectedOption = options.find((option) => option.value === value);
+  const selectedOption = (options ?? []).find(
+    (option) => option.value === value
+  );
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -57,7 +59,7 @@ export function Combobox({
           className={cn(
             "w-full justify-between",
             !value && "text-muted-foreground",
-            className,
+            className
           )}
         >
           {selectedOption ? selectedOption.label : placeholder}
@@ -84,7 +86,7 @@ export function Combobox({
                   <Check
                     className={cn(
                       "ml-auto h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0",
+                      value === option.value ? "opacity-100" : "opacity-0"
                     )}
                   />
                 </CommandItem>

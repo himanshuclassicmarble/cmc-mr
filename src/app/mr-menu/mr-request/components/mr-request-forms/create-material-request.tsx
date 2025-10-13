@@ -21,20 +21,22 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { materialRateSchema, type MaterialRateFormValues } from "./schema";
-import { Plus, Pencil, X } from "lucide-react";
+import { Plus, Pencil, X, PlusCircle } from "lucide-react";
 import { Combobox } from "./mr-details-form";
 import { CreateMaterialRequestProps } from "../mr-request-table/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select } from "@/components/ui/select";
 
 export function CreateMaterialRequest({
   detailsOption,
 }: CreateMaterialRequestProps) {
   const [open, setOpen] = useState(false);
+
   const [items, setItems] = useState<MaterialRateFormValues[]>([]);
 
   const form = useForm<MaterialRateFormValues>({
@@ -42,10 +44,10 @@ export function CreateMaterialRequest({
     defaultValues: {
       requestId: "",
       serialNumber: undefined,
-      itemCode: "",
-      details: "",
+      materialCode: "",
+      description: "",
       quantityRequired: 0,
-      unitOfMeasurement: "",
+      unitOfMeasurement: undefined,
       purpose: "",
     },
     mode: "onBlur",
@@ -53,8 +55,8 @@ export function CreateMaterialRequest({
 
   const handleAddItem = async () => {
     const valid = await form.trigger([
-      "itemCode",
-      "details",
+      "materialCode",
+      "description",
       "quantityRequired",
       "unitOfMeasurement",
       "purpose",
@@ -76,10 +78,10 @@ export function CreateMaterialRequest({
     form.reset({
       requestId: "",
       serialNumber: undefined,
-      itemCode: "",
-      details: "",
+      materialCode: "",
+      description: "",
       quantityRequired: 0,
-      unitOfMeasurement: "",
+      unitOfMeasurement: undefined,
       purpose: "",
     });
   };
@@ -99,8 +101,8 @@ export function CreateMaterialRequest({
     form.reset({
       requestId: "",
       serialNumber: undefined,
-      itemCode: target.itemCode ?? "",
-      details: target.details ?? "",
+      materialCode: target.materialCode ?? "",
+      description: target.description ?? "",
       quantityRequired: target.quantityRequired ?? 0,
       unitOfMeasurement: target.unitOfMeasurement ?? "",
       purpose: target.purpose ?? "",
@@ -147,10 +149,10 @@ export function CreateMaterialRequest({
     form.reset({
       requestId: "",
       serialNumber: undefined,
-      itemCode: "",
-      details: "",
+      materialCode: "",
+      description: "",
       quantityRequired: 0,
-      unitOfMeasurement: "",
+      unitOfMeasurement: undefined,
       purpose: "",
     });
     setOpen(false);
@@ -167,10 +169,10 @@ export function CreateMaterialRequest({
           form.reset({
             requestId: "",
             serialNumber: undefined,
-            itemCode: "",
-            details: "",
+            materialCode: "",
+            description: "",
             quantityRequired: 0,
-            unitOfMeasurement: "",
+            unitOfMeasurement: undefined,
             purpose: "",
           });
         }
@@ -182,74 +184,88 @@ export function CreateMaterialRequest({
       <DialogContent className="sm:max-w-[720px]">
         <DialogHeader>
           <DialogTitle>Create Material Request</DialogTitle>
-          <DialogDescription></DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="h-[200px] overflow-scroll">
-          {items.length > 0 && (
-            <div className="grid grid-cols-1 gap-2">
-              {items.map((it, idx) => (
-                <Card key={idx} className="p-2 shadow-sm border">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm font-semibold">
-                        SR No:{" "}
-                        <span className="font-mono">{it.serialNumber}</span>
+        <ScrollArea className="h-[200px] overflow-hidden">
+          <Card className="p-2 pr-3 shadow-none ">
+            {items.length > 0 ? (
+              <div className="grid grid-cols-1 gap-2">
+                {items.map((it, idx) => (
+                  <Card key={idx} className="p-2 shadow-none border">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-semibold">
+                          SR No:{" "}
+                          <span className="font-mono">{it.serialNumber}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => handleEditItem(idx)}
+                            aria-label="Edit item"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => handleRemoveItem(idx)}
+                            aria-label="Remove item"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleEditItem(idx)}
-                          aria-label="Edit item"
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleRemoveItem(idx)}
-                          aria-label="Remove item"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
 
-                    <div className="text-xs space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-muted-foreground">
-                          Item Code:
-                        </span>
-                        <span className="font-medium">{it.itemCode}</span>
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-muted-foreground">Qty:</span>
-                        <span className="font-medium">
-                          {it.quantityRequired} {it.unitOfMeasurement || ""}
-                        </span>
-                        {it.details && (
-                          <>
-                            <span className="text-muted-foreground">•</span>
-                            <span className="text-muted-foreground">
-                              Details:
-                            </span>
-                            <span className="font-medium">{it.details}</span>
-                          </>
-                        )}
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Purpose: </span>
-                        <span className="font-medium">{it.purpose}</span>
+                      <div className="text-xs space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-muted-foreground">
+                            Material Code:
+                          </span>
+                          <span className="font-medium">{it.materialCode}</span>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-muted-foreground">Qty:</span>
+                          <span className="font-medium">
+                            {it.quantityRequired} {it.unitOfMeasurement || ""}
+                          </span>
+                          {it.description && (
+                            <>
+                              <span className="text-muted-foreground">•</span>
+                              <span className="text-muted-foreground">
+                                Description:
+                              </span>
+                              <span className="font-medium">
+                                {it.description}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Purpose:{" "}
+                          </span>
+                          <span className="font-medium">{it.purpose}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col justify-center items-center p-12">
+                <h2 className="font-semibold  ">Add Items</h2>
+                <div className="hidden md:table-cell">
+                  Fill below details to create request
+                </div>
+                <PlusCircle size={28} className="" />
+              </div>
+            )}
+          </Card>
         </ScrollArea>
+
         <Form {...form}>
           <form
             onSubmit={(e) => {
@@ -262,24 +278,24 @@ export function CreateMaterialRequest({
               {/* Item Code */}
               <FormField
                 control={form.control}
-                name="itemCode"
+                name="materialCode"
                 render={({ field }) => (
                   <FormItem className="w-32">
-                    <FormLabel>Item Code</FormLabel>
+                    <FormLabel>Material Code</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter Item Code" {...field} />
+                      <Input placeholder="Code" {...field} />
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
-              {/* Details */}
+              {/* Descriptions */}
               <FormField
                 control={form.control}
-                name="details"
+                name="description"
                 render={({ field }) => (
                   <FormItem className="w-full">
-                    <FormLabel>Details</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl className="w-full">
                       <div className="w-full max-w-full overflow-hidden">
                         <Combobox
@@ -287,9 +303,9 @@ export function CreateMaterialRequest({
                           options={detailsOption}
                           value={field.value}
                           onValueChange={field.onChange}
-                          placeholder="Add Details"
-                          searchPlaceholder="Select Details"
-                          emptyText="No Details found."
+                          placeholder="Add Description"
+                          searchPlaceholder="Select Description"
+                          emptyText="No Description found."
                         />
                       </div>
                     </FormControl>
@@ -333,7 +349,7 @@ export function CreateMaterialRequest({
                   <FormItem className="w-full">
                     <FormLabel>Unit of Measurement</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., kg, pcs" {...field} />
+                      <Select></Select>
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>

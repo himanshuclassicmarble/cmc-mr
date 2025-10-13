@@ -6,6 +6,7 @@ import { MRRequest } from "../../types";
 import { EditMaterialRequest } from "../mr-request-forms/edit-material-request";
 import { Badge } from "@/components/ui/badge";
 import { MRRequestApproval } from "../mr-request-forms/mr-request-approval";
+import { detailsOption } from "./data";
 
 export const mrRequestColumn: ColumnDef<MRRequest>[] = [
   {
@@ -63,7 +64,7 @@ export const mrRequestColumn: ColumnDef<MRRequest>[] = [
 
       return (
         <div className="flex items-center gap-2">
-          <EditMaterialRequest />
+          <EditMaterialRequest detailsOption={detailsOption} />
           <Button
             variant="destructive"
             className="rounded-full"
