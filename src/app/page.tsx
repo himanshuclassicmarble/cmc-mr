@@ -15,7 +15,7 @@ export default function HomePage() {
     {
       title: "Home Screen",
       description: "List the Material Request",
-      href: "/mr-menu/home-screen",
+      href: "/mr-menu/mr-request",
     },
     {
       title: "Material Master",

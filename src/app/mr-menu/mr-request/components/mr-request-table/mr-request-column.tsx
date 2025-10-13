@@ -2,15 +2,29 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash } from "lucide-react";
-import { MaterialData } from "../types";
-import { EditMaterialRequest } from "./mr-request-forms/edit-material-request";
+import { MRRequest } from "../../types";
+import { EditMaterialRequest } from "../mr-request-forms/edit-material-request";
+import { Badge } from "@/components/ui/badge";
+import { MRRequestApproval } from "../mr-request-forms/mr-request-approval";
 
-export const MRHomeColumn: ColumnDef<MaterialData>[] = [
+export const mrRequestColumn: ColumnDef<MRRequest>[] = [
   {
     accessorKey: "material",
     header: "Material Code ",
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("material")}</div>
+    ),
+  },
+  {
+    accessorKey: "materialDescription",
+    header: "Description",
+    cell: ({ row }) => (
+      <div
+        className="max-w-xs truncate"
+        title={row.getValue("materialDescription")}
+      >
+        {row.getValue("materialDescription")}
+      </div>
     ),
   },
   {
@@ -35,37 +49,10 @@ export const MRHomeColumn: ColumnDef<MaterialData>[] = [
     cell: ({ row }) => <div>{row.getValue("buom")}</div>,
   },
   {
-    accessorKey: "materialDescription",
-    header: "Description",
-    cell: ({ row }) => (
-      <div
-        className="max-w-xs truncate"
-        title={row.getValue("materialDescription")}
-      >
-        {row.getValue("materialDescription")}
-      </div>
-    ),
-  },
-  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-
-      const statusColor =
-        status === "approved"
-          ? "bg-green-600 text-green-50"
-          : status === "pending"
-            ? "bg-red-600 text-red-50"
-            : "";
-
-      return (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium uppercase ${statusColor}`}
-        >
-          {status}
-        </span>
-      );
+      return <MRRequestApproval data={row.original} />;
     },
   },
   {

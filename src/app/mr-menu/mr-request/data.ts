@@ -1,6 +1,6 @@
-import { MaterialData } from "./types";
+import { MRRequest } from "./types";
 
-export const materialData: MaterialData[] = [
+export const materialRequest: MRRequest[] = [
   {
     material: "60003097",
     materialType: "ERSA",

@@ -1,4 +1,4 @@
-export type MaterialData = {
+export type MRRequest = {
   material: string;
   materialType: string;
   materialGroup: string;

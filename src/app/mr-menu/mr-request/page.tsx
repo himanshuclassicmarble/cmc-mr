@@ -1,7 +1,7 @@
-import MasterTable from "../_components/approval-table/approval-table";
-import { MRHomeColumn } from "./components/mr-home-column";
 import { CreateMaterialRequest } from "./components/mr-request-forms/create-material-request";
-import { materialData } from "./data";
+import { mrRequestColumn } from "./components/mr-request-table/mr-request-column";
+import MRRequestTable from "./components/mr-request-table/mr-request-table";
+import { materialRequest } from "./data";
 
 const HomeScreen = () => {
   return (
@@ -10,11 +10,7 @@ const HomeScreen = () => {
         Home Screen
       </header>
       <main>
-        <MasterTable
-          data={materialData}
-          columns={MRHomeColumn}
-          component={<CreateMaterialRequest />}
-        />
+        <MRRequestTable data={materialRequest} columns={mrRequestColumn} />
       </main>
     </div>
   );
