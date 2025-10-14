@@ -1,8 +1,7 @@
 import { materialRequest } from "../../data";
-import { DetailsOption } from "./types";
+import { MaterialOption } from "./types";
 
-export const detailsOption: DetailsOption[] = materialRequest.map((item) => ({
-  value: item.materialDescription,
-  label: item.materialDescription,
-  ItemCode: item.material,
+export const materialOption: MaterialOption[] = materialRequest.map((item) => ({
+  materialCode: item.material,
+  description: item.materialDescription,
 }));

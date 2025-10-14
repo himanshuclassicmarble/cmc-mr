@@ -5,11 +5,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import { MRMasterSchema } from "./mr-master-form/schema";
 import { getMaterialMasterColumns } from "./mr-request-table/material-master-columns";
 
-interface TableWrapperProps {
-  data: MRMasterSchema[];
-  cols: ColumnDef<MRMasterSchema>[];
-}
-
 export const TableWrapper = ({ data }: { data: MRMasterSchema[] }) => {
   const [tableData, setTableData] = useState<MRMasterSchema[]>(data);
 

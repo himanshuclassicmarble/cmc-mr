@@ -25,20 +25,41 @@ import { Card } from "@/components/ui/card";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { materialRateSchema, type MaterialRateFormValues } from "./schema";
+import {
+  materialRateSchema,
+  unitOfMeasurement,
+  type MaterialRateFormValues,
+} from "./schema";
 import { Plus, Pencil, X, PlusCircle } from "lucide-react";
 import { Combobox } from "./mr-details-form";
 import { CreateMaterialRequestProps } from "../mr-request-table/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function CreateMaterialRequest({
-  detailsOption,
+  materialOption,
 }: CreateMaterialRequestProps) {
   const [open, setOpen] = useState(false);
 
   const [items, setItems] = useState<MaterialRateFormValues[]>([]);
 
+  const handleItemCodeChange = (code: string) => {
+    const selected = materialOption.find((m) => m.materialCode === code);
+    form.setValue("materialCode", code);
+    form.setValue("description", selected?.description || "");
+  };
+
+  const handleDescriptionChange = (desc: string) => {
+    const selected = materialOption.find((m) => m.description === desc);
+    form.setValue("description", desc);
+    form.setValue("materialCode", selected?.materialCode || "");
+  };
   const form = useForm<MaterialRateFormValues>({
     resolver: zodResolver(materialRateSchema),
     defaultValues: {
@@ -181,20 +202,24 @@ export function CreateMaterialRequest({
       <DialogTrigger asChild>
         <Button>Create Material Request</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[720px]">
+      <DialogContent className="w-full">
         <DialogHeader>
           <DialogTitle>Create Material Request</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="h-[200px] overflow-hidden">
-          <Card className="p-2 pr-3 shadow-none ">
+          <Card className="p-2 pr-3 shadow-none">
             {items.length > 0 ? (
               <div className="grid grid-cols-1 gap-2">
                 {items.map((it, idx) => (
-                  <Card key={idx} className="p-2 shadow-none border">
+                  <Card
+                    key={idx}
+                    className="p-2 shadow-none border rounded-md bg-muted/20"
+                  >
                     <div className="flex flex-col gap-2">
+                      {/* Header Row */}
                       <div className="flex items-center justify-between">
-                        <div className="text-sm font-semibold">
+                        <div className="text-sm font-semibold tracking-tight">
                           SR No:{" "}
                           <span className="font-mono">{it.serialNumber}</span>
                         </div>
@@ -202,7 +227,7 @@ export function CreateMaterialRequest({
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-7 w-7"
+                            className="h-7 w-7 border"
                             onClick={() => handleEditItem(idx)}
                             aria-label="Edit item"
                           >
@@ -220,32 +245,39 @@ export function CreateMaterialRequest({
                         </div>
                       </div>
 
+                      {/* Content Area */}
                       <div className="text-xs space-y-1">
+                        {/* Material & Qty */}
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-muted-foreground">
-                            Material Code:
+                            Material:
                           </span>
                           <span className="font-medium">{it.materialCode}</span>
+
                           <span className="text-muted-foreground">•</span>
+
                           <span className="text-muted-foreground">Qty:</span>
                           <span className="font-medium">
                             {it.quantityRequired} {it.unitOfMeasurement || ""}
                           </span>
-                          {it.description && (
-                            <>
-                              <span className="text-muted-foreground">•</span>
-                              <span className="text-muted-foreground">
-                                Description:
-                              </span>
-                              <span className="font-medium">
-                                {it.description}
-                              </span>
-                            </>
-                          )}
                         </div>
-                        <div>
+
+                        {/* Description (Conditional) */}
+                        {it.description && (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-muted-foreground">
+                              Description:
+                            </span>
+                            <span className="font-medium">
+                              {it.description}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Purpose */}
+                        <div className="flex items-center gap-2">
                           <span className="text-muted-foreground">
-                            Purpose:{" "}
+                            Purpose:
                           </span>
                           <span className="font-medium">{it.purpose}</span>
                         </div>
@@ -256,11 +288,11 @@ export function CreateMaterialRequest({
               </div>
             ) : (
               <div className="flex flex-col justify-center items-center p-12">
-                <h2 className="font-semibold  ">Add Items</h2>
-                <div className="hidden md:table-cell">
+                <h2 className="font-semibold text-sm">Add Items</h2>
+                <div className="hidden md:table-cell text-xs text-muted-foreground">
                   Fill below details to create request
                 </div>
-                <PlusCircle size={28} className="" />
+                <PlusCircle size={28} className="mt-2" />
               </div>
             )}
           </Card>
@@ -270,46 +302,51 @@ export function CreateMaterialRequest({
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              // We manage saving via explicit Save button below
             }}
             className="space-y-4"
           >
-            <div className="flex flex-row gap-2 w-full">
-              {/* Item Code */}
+            <div className="gap-2">
               <FormField
                 control={form.control}
                 name="materialCode"
                 render={({ field }) => (
-                  <FormItem className="w-32">
+                  <FormItem>
                     <FormLabel>Material Code</FormLabel>
                     <FormControl>
-                      <Input placeholder="Code" {...field} />
+                      <Combobox
+                        options={materialOption.map((m) => ({
+                          value: m.materialCode,
+                          label: m.materialCode,
+                        }))}
+                        value={field.value}
+                        onValueChange={(value) => handleItemCodeChange(value)}
+                      />
                     </FormControl>
-                    <FormMessage className="text-xs" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
-              {/* Descriptions */}
+
               <FormField
                 control={form.control}
                 name="description"
                 render={({ field }) => (
-                  <FormItem className="w-full">
+                  <FormItem>
                     <FormLabel>Description</FormLabel>
-                    <FormControl className="w-full">
-                      <div className="w-full max-w-full overflow-hidden">
-                        <Combobox
-                          className="w-full max-w-full"
-                          options={detailsOption}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder="Add Description"
-                          searchPlaceholder="Select Description"
-                          emptyText="No Description found."
-                        />
-                      </div>
+                    <FormControl>
+                      <Combobox
+                        options={materialOption.map((m) => ({
+                          value: m.description,
+                          label: m.description,
+                        }))}
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value); // ✅ Update RHF form state
+                          handleDescriptionChange(value); // ✅ Sync Material Code too
+                        }}
+                      />
                     </FormControl>
-                    <FormMessage className="text-xs" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -349,7 +386,21 @@ export function CreateMaterialRequest({
                   <FormItem className="w-full">
                     <FormLabel>Unit of Measurement</FormLabel>
                     <FormControl>
-                      <Select></Select>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select UOM" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {unitOfMeasurement.map((uom, idx) => (
+                            <SelectItem key={idx} value={uom}>
+                              {uom}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>

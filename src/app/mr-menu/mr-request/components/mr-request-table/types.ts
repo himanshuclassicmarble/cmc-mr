@@ -1,9 +1,8 @@
-export type DetailsOption = {
-  value: string;
-  label: string;
-  ItemCode: string;
-};
+export interface MaterialOption {
+  materialCode: string;
+  description: string;
+}
 
 export interface CreateMaterialRequestProps {
-  detailsOption: DetailsOption[];
+  materialOption: MaterialOption[];
 }

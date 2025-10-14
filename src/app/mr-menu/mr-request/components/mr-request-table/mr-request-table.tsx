@@ -34,7 +34,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight, Columns3 } from "lucide-react";
 import { MRRequest } from "../../types";
 import { CreateMaterialRequest } from "../mr-request-forms/create-material-request";
-import { detailsOption } from "./data";
+import { materialOption } from "./data";
 
 interface MRRequestProps {
   data: MRRequest[];
@@ -106,7 +106,7 @@ export default function MRRequestTable({ data, columns }: MRRequestProps) {
               ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <CreateMaterialRequest detailsOption={detailsOption} />
+        <CreateMaterialRequest materialOption={materialOption} />
       </div>
 
       {/* Table */}
