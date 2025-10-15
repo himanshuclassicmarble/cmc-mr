@@ -33,27 +33,31 @@ import { formSchema } from "../schema";
 import * as z from "zod";
 import { departmentConst, plantConst, roleConst } from "../constants";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Pencil } from "lucide-react";
+import { useEffect } from "react";
 
-export default function UserCreateForm() {
+type UserEditFormProps = {
+  userData: z.infer<typeof formSchema>;
+  onUpdateAction: (updatedUser: z.infer<typeof formSchema>) => void;
+};
+
+export default function UserEditForm({
+  userData,
+  onUpdateAction,
+}: UserEditFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      userId: "",
-      userName: "",
-      empCode: "",
-      department: undefined,
-      plant: undefined,
-      role: undefined,
-      isActive: false,
-    },
+    defaultValues: userData,
   });
 
+  // Reset form whenever `userData` changes
+  useEffect(() => {
+    form.reset(userData);
+  }, [userData, form]);
+
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log({ values });
-    toast("Successfully Submitted.");
-    form.reset();
+    onUpdateAction(values);
+    toast.success("User Updated Successfully!");
   };
 
   return (
@@ -65,7 +69,7 @@ export default function UserCreateForm() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md w-full">
         <DialogHeader>
-          <DialogTitle className="text-left">User Edit Form</DialogTitle>
+          <DialogTitle className="text-left">Edit User</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -131,7 +135,7 @@ export default function UserCreateForm() {
                         onValueChange={field.onChange}
                         value={field.value}
                       >
-                        <SelectTrigger className="flex-1 w-full">
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select Department" />
                         </SelectTrigger>
                         <SelectContent>
@@ -159,7 +163,7 @@ export default function UserCreateForm() {
                         onValueChange={field.onChange}
                         value={field.value}
                       >
-                        <SelectTrigger className="flex-1 w-full">
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select Plant" />
                         </SelectTrigger>
                         <SelectContent>
@@ -177,7 +181,7 @@ export default function UserCreateForm() {
               />
             </div>
 
-            {/* ROLE */}
+            {/* Role & Status */}
             <div className="flex flex-row gap-4">
               <FormField
                 control={form.control}
@@ -190,7 +194,7 @@ export default function UserCreateForm() {
                         onValueChange={field.onChange}
                         value={field.value}
                       >
-                        <SelectTrigger className="flex-1 w-full">
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select Role" />
                         </SelectTrigger>
                         <SelectContent>
@@ -207,21 +211,18 @@ export default function UserCreateForm() {
                 )}
               />
 
-              {/* ACTIVE STATUS */}
-
               <FormField
                 control={form.control}
                 name="isActive"
                 render={({ field }) => (
-                  <FormItem className="w-2/4 flex flex-row ">
+                  <FormItem className="w-2/4 flex flex-row">
                     <FormControl>
-                      <div className="flex items-center  space-x-2 pt-5">
+                      <div className="flex items-center space-x-2 pt-5">
                         <FormLabel className="p-0 m-0">IsActive</FormLabel>
                         <Switch
                           id="IsActive"
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          className=""
                         />
                       </div>
                     </FormControl>
@@ -230,7 +231,7 @@ export default function UserCreateForm() {
                 )}
               />
             </div>
-            {/* Buttons */}
+
             <DialogFooter className="flex flex-col sm:flex-row gap-2">
               <Button type="submit" className="md:w-40">
                 Save

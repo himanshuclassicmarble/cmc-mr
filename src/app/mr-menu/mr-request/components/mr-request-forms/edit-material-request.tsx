@@ -27,7 +27,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { materialRateSchema, type MaterialRateFormValues } from "./schema";
 import { Plus, Pencil, X, PlusCircle } from "lucide-react";
-import { Combobox } from "./mr-details-form";
+import { Combobox } from "./combobox";
 import { CreateMaterialRequestProps } from "../mr-request-table/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 

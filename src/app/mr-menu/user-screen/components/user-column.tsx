@@ -1,15 +1,17 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { Delete, Edit, Pencil, Trash } from "lucide-react";
+import { Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { UserData } from "../types";
+import { UserFormSchema } from "./schema";
 import UserEditForm from "./user-form/user-edit-form";
 import { Badge } from "@/components/ui/badge";
 
-export const userColumns: ColumnDef<UserData>[] = [
+export const getUserColumns = (
+  handleUpdateData: (updatedRow: UserFormSchema, rowIndex: number) => void,
+): ColumnDef<UserFormSchema>[] => [
   {
     accessorKey: "userId",
-    header: "UserId ",
+    header: "UserId",
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("userId")}</div>
     ),
@@ -66,15 +68,21 @@ export const userColumns: ColumnDef<UserData>[] = [
       );
     },
   },
-
   {
     id: "actions",
     header: "Action",
     cell: ({ row }) => {
-      const Action = row.original;
+      const userData = row.original;
+      const rowIndex = row.index;
+
       return (
         <div className="flex flex-row gap-2">
-          <UserEditForm />
+          <UserEditForm
+            userData={userData}
+            onUpdateAction={(updatedData) =>
+              handleUpdateData(updatedData, rowIndex)
+            }
+          />
           <Button
             className="size-8 rounded-full"
             variant="destructive"
