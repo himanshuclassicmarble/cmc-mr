@@ -25,8 +25,7 @@ export default function page() {
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="bg-card border rounded-xl shadow-sm p-6">
+        <main>
           <UserTableWrapper data={userData} />
         </main>
       </div>

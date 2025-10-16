@@ -63,8 +63,6 @@ export function EditMaterialRequest({
       qtyReq: data.qtyReq || "",
       uom: data.uom || "",
       purpose: data.purpose || "",
-      materialGroup: data.materialGroup || "",
-      materialType: data.materialType || "",
     },
     mode: "onBlur",
   });
@@ -77,8 +75,6 @@ export function EditMaterialRequest({
         qtyReq: data.qtyReq || "",
         uom: data.uom || "",
         purpose: data.purpose || "",
-        materialGroup: data.materialGroup || "",
-        materialType: data.materialType || "",
       });
     }
   }, [open, data, form]);
@@ -125,8 +121,6 @@ export function EditMaterialRequest({
       qtyReq: formValues.qtyReq,
       uom: formValues.uom,
       purpose: formValues.purpose,
-      materialGroup: formValues.materialGroup,
-      materialType: formValues.materialType,
     };
 
     onUpdate(data.reqId, data.srNo, updates);

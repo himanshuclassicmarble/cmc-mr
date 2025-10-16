@@ -15,7 +15,7 @@ export const getMRRequestColumns = (
 ): ColumnDef<MaterialRateValues>[] => [
   {
     accessorKey: "reqId",
-    header: "Request ID",
+    header: "Req ID",
   },
   {
     accessorKey: "srNo",
@@ -23,7 +23,7 @@ export const getMRRequestColumns = (
   },
   {
     accessorKey: "materialCode",
-    header: "Material Code",
+    header: "MR Code",
   },
   {
     accessorKey: "description",
@@ -31,19 +31,19 @@ export const getMRRequestColumns = (
   },
   {
     accessorKey: "materialGroup",
-    header: "Material Group",
+    header: "MR Group",
   },
   {
     accessorKey: "qtyReq",
-    header: "Qty Requested",
+    header: "Qty Req",
   },
   {
     accessorKey: "qtyApproved",
-    header: "Qty Approved",
+    header: "Qty Appr",
   },
   {
     accessorKey: "qtyIssued",
-    header: "Qty Issued",
+    header: "Qty Iss",
   },
   {
     accessorKey: "uom",
@@ -51,7 +51,7 @@ export const getMRRequestColumns = (
   },
   {
     accessorKey: "materialType",
-    header: "Material Type",
+    header: "MR Type",
   },
   {
     accessorKey: "purpose",
@@ -66,19 +66,19 @@ export const getMRRequestColumns = (
   },
   {
     accessorKey: "createdDate",
-    header: "Created Date",
+    header: "Crdt Date",
   },
   {
     accessorKey: "approvalDate",
-    header: "Approval Date",
+    header: "Appr Date",
   },
   {
     accessorKey: "createdBy",
-    header: "Created By",
+    header: "Crtd By",
   },
   {
     accessorKey: "approvedBy",
-    header: "Approved By",
+    header: "Appr By",
   },
   {
     id: "actions",

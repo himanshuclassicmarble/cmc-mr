@@ -26,8 +26,6 @@ export const DEFAULT_FORM_VALUES: FormFields = {
   materialCode: "",
   description: "",
   qtyReq: "",
-  uom: "",
+  uom: "L",
   purpose: "",
-  materialGroup: "",
-  materialType: "",
 };

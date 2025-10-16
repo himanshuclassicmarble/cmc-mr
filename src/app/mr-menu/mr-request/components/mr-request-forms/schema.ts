@@ -42,6 +42,4 @@ export const formFieldsSchema = materialRateSchema.pick({
   qtyReq: true,
   uom: true,
   purpose: true,
-  materialGroup: true,
-  materialType: true,
 });

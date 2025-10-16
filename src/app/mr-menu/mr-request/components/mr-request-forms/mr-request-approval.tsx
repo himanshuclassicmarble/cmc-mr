@@ -40,7 +40,13 @@ export const MRRequestApproval = ({
       ? "bg-green-600 text-green-50 hover:bg-green-700"
       : status === "pending"
         ? "bg-yellow-600 text-yellow-50 hover:bg-yellow-700"
-        : "bg-gray-500 text-gray-50 hover:bg-gray-600";
+        : status === "rejected"
+          ? "bg-red-600 text-yellow-50 hover:bg-red-700"
+          : status === "Partially Open"
+            ? "bg-blue-800 text-blue-50 hover:bg-blue-900"
+            : status === "Open"
+              ? "bg-green-800 text-green-50 hover:bg-green-900"
+              : "bg-gray-500 text-gray-50 hover:bg-gray-600";
 
   const handleApprove = (values: FormValues) => {
     onUpdate(data.reqId, data.srNo, {

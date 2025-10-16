@@ -37,8 +37,23 @@ import { Plus, Pencil, X } from "lucide-react";
 import { Combobox } from "./_sub-components/combobox";
 import { formFieldsSchema, MaterialRateValues } from "./schema";
 import { DEFAULT_FORM_VALUES, unitOfMeasurement } from "./constants";
-import { FormFields, MaterialRequestProps } from "./types";
+import { FormFields } from "./types";
 import { generateRequestId, renumberItems } from "./utils";
+
+// Update MaterialOption type to include all fields
+interface MaterialOption {
+  materialCode: string;
+  materialType: string;
+  materialGroup: string;
+  uom: string;
+  materialDescription: string;
+}
+
+// Update MaterialRequestProps type
+interface MaterialRequestProps {
+  materialOption: MaterialOption[];
+  onAddData: (newData: MaterialRateValues) => void;
+}
 
 export function CreateMaterialRequest({
   materialOption,
@@ -62,18 +77,26 @@ export function CreateMaterialRequest({
 
     if (selectedMaterial) {
       form.setValue("materialCode", code, { shouldValidate: true });
-      form.setValue("description", selectedMaterial.description || "");
+      form.setValue("description", selectedMaterial.materialDescription || "");
+      form.setValue("uom", selectedMaterial.uom || "");
+      // Optionally set materialType and materialGroup in the form if they are part of FormFields
+      // form.setValue("materialType", selectedMaterial.materialType || "");
+      // form.setValue("materialGroup", selectedMaterial.materialGroup || "");
     }
   };
 
   const handleDescriptionChange = (description: string) => {
     const selectedMaterial = materialOption.find(
-      (m) => m.description === description,
+      (m) => m.materialDescription === description,
     );
 
     if (selectedMaterial) {
       form.setValue("description", description, { shouldValidate: true });
       form.setValue("materialCode", selectedMaterial.materialCode || "");
+      form.setValue("uom", selectedMaterial.uom || "");
+      // Optionally set materialType and materialGroup in the form if they are part of FormFields
+      // form.setValue("materialType", selectedMaterial.materialType || "");
+      // form.setValue("materialGroup", selectedMaterial.materialGroup || "");
     }
   };
 
@@ -88,17 +111,21 @@ export function CreateMaterialRequest({
     }
 
     const formValues = form.getValues();
+    const selectedMaterial = materialOption.find(
+      (m) => m.materialCode === formValues.materialCode,
+    );
+
     const newItem: MaterialRateValues = {
       reqId: generateRequestId(),
-      srNo: String(items.length + 1),
+      srNo: String(items.length * 10 + 10),
       materialCode: formValues.materialCode,
       description: formValues.description,
-      materialGroup: formValues.materialGroup,
+      materialGroup: selectedMaterial?.materialGroup || "",
+      materialType: selectedMaterial?.materialType || "",
       qtyReq: formValues.qtyReq,
       qtyApproved: "",
       qtyIssued: "",
       uom: formValues.uom,
-      materialType: formValues.materialType,
       purpose: formValues.purpose,
       status: "pending",
       createdDate: new Date().toLocaleDateString(),
@@ -124,8 +151,9 @@ export function CreateMaterialRequest({
       qtyReq: itemToEdit.qtyReq,
       uom: itemToEdit.uom,
       purpose: itemToEdit.purpose,
-      materialGroup: itemToEdit.materialGroup,
-      materialType: itemToEdit.materialType,
+      // Optionally include materialType and materialGroup if they are part of FormFields
+      // materialType: itemToEdit.materialType,
+      // materialGroup: itemToEdit.materialGroup,
     });
   };
 
@@ -135,7 +163,11 @@ export function CreateMaterialRequest({
     toast.message("Item removed");
   };
 
-  // ==================== Save & Dialog Management ====================
+  const handleDialogClose = () => {
+    setItems([]);
+    form.reset(DEFAULT_FORM_VALUES);
+    setOpen(false);
+  };
 
   const handleSave = async () => {
     if (items.length === 0) {
@@ -147,12 +179,6 @@ export function CreateMaterialRequest({
 
     toast.success(`${items.length} request(s) added to table!`);
     handleDialogClose();
-  };
-
-  const handleDialogClose = () => {
-    setItems([]);
-    form.reset(DEFAULT_FORM_VALUES);
-    setOpen(false);
   };
 
   return (
@@ -292,8 +318,8 @@ export function CreateMaterialRequest({
                   <FormControl>
                     <Combobox
                       options={materialOption.map((m) => ({
-                        value: m.description,
-                        label: m.description,
+                        value: m.materialDescription,
+                        label: m.materialDescription,
                       }))}
                       value={field.value}
                       onValueChange={handleDescriptionChange}
@@ -328,12 +354,11 @@ export function CreateMaterialRequest({
                     <FormLabel>Unit</FormLabel>
                     <FormControl>
                       <Select
-                        value={field.value} // no need to force default
+                        value={field.value}
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select Unit" />{" "}
-                          {/* <-- placeholder */}
+                          <SelectValue placeholder="Select Unit" />
                         </SelectTrigger>
                         <SelectContent>
                           {unitOfMeasurement.map((uom) => (

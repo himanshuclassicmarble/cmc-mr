@@ -11,8 +11,6 @@ export type FormFields = {
   qtyReq: string;
   uom: string;
   purpose: string;
-  materialGroup: string;
-  materialType: string;
 };
 
 // edit and mr approval

@@ -16,7 +16,7 @@ const HomeScreen = () => {
           </div>
         </div>
       </header>
-      <main className="bg-card border rounded-xl shadow-sm p-6">
+      <main>
         <MRRequestTableWrapper data={materialRequest} />
       </main>
     </div>

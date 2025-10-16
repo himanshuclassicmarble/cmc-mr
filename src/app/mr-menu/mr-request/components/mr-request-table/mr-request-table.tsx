@@ -30,12 +30,14 @@ import {
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuItem,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight, Columns3, ArrowUpDown } from "lucide-react";
 import { CreateMaterialRequest } from "../mr-request-forms/create-material-request";
-import { materialOption } from "./data";
 import { MaterialRateValues } from "../mr-request-forms/schema";
+import { materialMaster } from "@/app/mr-menu/material-master/data";
+import { statusConst } from "../mr-request-forms/constants";
 
 interface MRRequestProps {
   data: MaterialRateValues[];
@@ -72,7 +74,7 @@ export default function MRRequestTable({
 
   return (
     <div className="space-y-4">
-      {/* Search + Column Toggle + Sorting */}
+      {/* Search + Column Toggle + Sorting + Status Filter */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full">
         <div className="flex-1 max-w-sm">
           <Input
@@ -82,71 +84,113 @@ export default function MRRequestTable({
           />
         </div>
 
-        {/* Column Visibility */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 sm:ml-auto"
-            >
-              <Columns3 className="h-4 w-4" />
-              Columns
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {table
-              .getAllColumns()
-              .filter((col) => col.getCanHide())
-              .map((col) => (
-                <DropdownMenuCheckboxItem
+        <div className="flex flex-row gap-2">
+          {/* Status Filter Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="flex-1 flex items-center gap-2"
+              >
+                Filter Status
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Status</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() =>
+                  setColumnFilters((prev) =>
+                    prev.filter((f) => f.id !== "status"),
+                  )
+                }
+              >
+                All
+              </DropdownMenuItem>
+              {statusConst.map((status) => (
+                <DropdownMenuItem
+                  key={status}
+                  onClick={() =>
+                    setColumnFilters((prev) => [
+                      ...prev.filter((f) => f.id !== "status"),
+                      { id: "status", value: status },
+                    ])
+                  }
+                >
+                  {status}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Column Visibility */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="flex-1 items-center gap-2 sm:ml-auto"
+              >
+                <Columns3 className="h-4 w-4" />
+                Columns
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {table
+                .getAllColumns()
+                .filter((col) => col.getCanHide())
+                .map((col) => (
+                  <DropdownMenuCheckboxItem
+                    key={col.id}
+                    checked={col.getIsVisible()}
+                    onCheckedChange={(value) => col.toggleVisibility(!!value)}
+                  >
+                    {col.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Sorting */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="flex-1 flex items-center gap-2"
+              >
+                <ArrowUpDown className="h-4 w-4" />
+                Sort
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {table.getAllColumns().map((col) => (
+                <DropdownMenuItem
                   key={col.id}
-                  checked={col.getIsVisible()}
-                  onCheckedChange={(value) => col.toggleVisibility(!!value)}
+                  onClick={() => {
+                    const currentSort = sorting.find((s) => s.id === col.id);
+                    let newSorting: SortingState = [];
+
+                    if (!currentSort) {
+                      // Not sorted yet → sort ascending
+                      newSorting = [{ id: col.id, desc: false }];
+                    } else if (!currentSort.desc) {
+                      // Currently ascending → sort descending
+                      newSorting = [{ id: col.id, desc: true }];
+                    } else {
+                      // Currently descending → remove sorting
+                      newSorting = [];
+                    }
+
+                    setSorting(newSorting);
+                  }}
                 >
                   {col.id}
-                </DropdownMenuCheckboxItem>
+                </DropdownMenuItem>
               ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Sorting */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="flex items-center gap-2">
-              <ArrowUpDown className="h-4 w-4" />
-              Sort
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {table.getAllColumns().map((col) => (
-              <DropdownMenuItem
-                key={col.id}
-                onClick={() => {
-                  const currentSort = sorting.find((s) => s.id === col.id);
-                  let newSorting: SortingState = [];
-
-                  if (!currentSort) {
-                    // Not sorted yet → sort ascending
-                    newSorting = [{ id: col.id, desc: false }];
-                  } else if (!currentSort.desc) {
-                    // Currently ascending → sort descending
-                    newSorting = [{ id: col.id, desc: true }];
-                  } else {
-                    // Currently descending → remove sorting
-                    newSorting = [];
-                  }
-
-                  setSorting(newSorting);
-                }}
-              >
-                {col.id}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <CreateMaterialRequest
-          materialOption={materialOption}
+          materialOption={materialMaster}
           onAddData={onAddData}
         />
       </div>
