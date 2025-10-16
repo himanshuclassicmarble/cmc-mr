@@ -1,9 +1,6 @@
 import React from "react";
-import MasterTable from "../_components/approval-table/approval-table";
-import MRCreateForm from "./_components/mr-master-form/mr-create-form";
 import { materialMaster } from "./data";
 import { TableWrapper } from "./_components/table-wrapper";
-import { getMaterialMasterColumns } from "./_components/mr-request-table/material-master-columns";
 
 export default function page() {
   return (
@@ -12,7 +9,7 @@ export default function page() {
         Material Master
       </header>
       <main>
-        <TableWrapper cols={getMaterialMasterColumns} data={materialMaster} />
+        <TableWrapper data={materialMaster} />
       </main>
     </div>
   );

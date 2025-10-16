@@ -65,7 +65,7 @@ export default function MREditForm({
       uom: rowData.uom,
       materialDescription: rowData.materialDescription,
     });
-  }, [rowData]);
+  }, [rowData, form]);
 
   const handleSubmit = (values: MRMasterSchema) => {
     const updatedRow: MRMasterSchema = {

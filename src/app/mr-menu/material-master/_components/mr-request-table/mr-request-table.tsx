@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight, Columns3 } from "lucide-react";
-import { MaterialMaster } from "../../types";
 import MRCreateForm from "../mr-master-form/mr-create-form";
 import { MRMasterSchema } from "../mr-master-form/schema";
 

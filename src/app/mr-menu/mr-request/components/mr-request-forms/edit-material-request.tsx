@@ -1,16 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,367 +20,280 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { materialRateSchema, type MaterialRateFormValues } from "./schema";
-import { Plus, Pencil, X, PlusCircle } from "lucide-react";
-import { Combobox } from "./combobox";
-import { CreateMaterialRequestProps } from "../mr-request-table/types";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Pencil } from "lucide-react";
+
+import { Combobox } from "./_sub-components/combobox";
+import { formFieldsSchema, MaterialRateValues } from "./schema";
+import { unitOfMeasurement } from "./constants";
+import { FormFields } from "./types";
+import { MaterialOption } from "../mr-request-table/types";
+
+interface EditMaterialRequestProps {
+  data: MaterialRateValues;
+  materialOption: MaterialOption[];
+  onUpdate: (
+    reqId: string,
+    srNo: string,
+    updates: Partial<MaterialRateValues>,
+  ) => void;
+}
 
 export function EditMaterialRequest({
-  detailsOption,
-}: CreateMaterialRequestProps) {
+  data,
+  materialOption,
+  onUpdate,
+}: EditMaterialRequestProps) {
   const [open, setOpen] = useState(false);
 
-  const [items, setItems] = useState<MaterialRateFormValues[]>([]);
-
-  const form = useForm<MaterialRateFormValues>({
-    resolver: zodResolver(materialRateSchema),
+  const form = useForm<FormFields>({
+    resolver: zodResolver(formFieldsSchema),
     defaultValues: {
-      requestId: "",
-      serialNumber: undefined,
-      materialCode: "",
-      description: "",
-      quantityRequired: 0,
-      unitOfMeasurement: undefined,
-      purpose: "",
+      materialCode: data.materialCode || "",
+      description: data.description || "",
+      qtyReq: data.qtyReq || "",
+      uom: data.uom || "",
+      purpose: data.purpose || "",
+      materialGroup: data.materialGroup || "",
+      materialType: data.materialType || "",
     },
     mode: "onBlur",
   });
 
-  const handleAddItem = async () => {
-    const valid = await form.trigger([
-      "materialCode",
-      "description",
-      "quantityRequired",
-      "unitOfMeasurement",
-      "purpose",
-    ]);
-    if (!valid) {
-      toast.error("Please fix the errors before adding.");
-      return;
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        materialCode: data.materialCode || "",
+        description: data.description || "",
+        qtyReq: data.qtyReq || "",
+        uom: data.uom || "",
+        purpose: data.purpose || "",
+        materialGroup: data.materialGroup || "",
+        materialType: data.materialType || "",
+      });
     }
-    const v = form.getValues();
-    const nextSerial = items.length + 1;
-    const newItem: MaterialRateFormValues = {
-      ...v,
-      serialNumber: nextSerial,
-    };
-    setItems((prev) => [...prev, newItem]);
+  }, [open, data, form]);
 
-    toast.success("Item added");
-    // reset row fields for next entry
-    form.reset({
-      requestId: "",
-      serialNumber: undefined,
-      materialCode: "",
-      description: "",
-      quantityRequired: 0,
-      unitOfMeasurement: undefined,
-      purpose: "",
-    });
+  // ==================== Material Selection Handlers ====================
+
+  const handleMaterialCodeChange = (code: string) => {
+    const selectedMaterial = materialOption.find(
+      (m) => m.materialCode === code,
+    );
+
+    if (selectedMaterial) {
+      form.setValue("materialCode", code, { shouldValidate: true });
+      form.setValue("description", selectedMaterial.description || "");
+    }
   };
 
-  const handleEditItem = (index: number) => {
-    const target = items[index];
-    // remove from list and renumber remaining
-    const remaining = items
-      .filter((_, i) => i !== index)
-      .map((it, i) => ({
-        ...it,
-        serialNumber: i + 1,
-      }));
-    setItems(remaining);
+  const handleDescriptionChange = (description: string) => {
+    const selectedMaterial = materialOption.find(
+      (m) => m.description === description,
+    );
 
-    // "empty the form and revert the data of that card" => put card data back into the form
-    form.reset({
-      requestId: "",
-      serialNumber: undefined,
-      materialCode: target.materialCode ?? "",
-      description: target.description ?? "",
-      quantityRequired: target.quantityRequired ?? 0,
-      unitOfMeasurement: target.unitOfMeasurement ?? "",
-      purpose: target.purpose ?? "",
-    });
+    if (selectedMaterial) {
+      form.setValue("description", description, { shouldValidate: true });
+      form.setValue("materialCode", selectedMaterial.materialCode || "");
+    }
   };
 
-  const handleRemoveItem = (index: number) => {
-    const remaining = items
-      .filter((_, i) => i !== index)
-      .map((it, i) => ({
-        ...it,
-        serialNumber: i + 1,
-      }));
-    setItems(remaining);
-    toast.message("Item removed");
-  };
-
-  const generateRequestId = () => {
-    const ts = new Date()
-      .toISOString()
-      .replace(/[-:T.Z]/g, "")
-      .slice(0, 14);
-    return `REQ-${ts}`;
-  };
+  // ==================== Save Handler ====================
 
   const handleSave = async () => {
-    // You may optionally auto-add the currently filled row if valid and not empty.
-    // For clarity, we only save what has been explicitly added via the + button.
-    if (items.length === 0) {
-      toast.error("Add at least one item before saving.");
+    const isValid = await form.trigger();
+
+    if (!isValid) {
+      toast.error("Please fix validation errors before saving.");
       return;
     }
-    const requestId = generateRequestId();
-    const payload = {
-      requestId,
-      items,
-    };
-    // eslint-disable-next-line no-console
-    console.log("Material Request Payload:", payload);
-    toast.success(`Request ${requestId} created!`);
 
-    // reset everything after save
-    setItems([]);
-    form.reset({
-      requestId: "",
-      serialNumber: undefined,
-      materialCode: "",
-      description: "",
-      quantityRequired: 0,
-      unitOfMeasurement: undefined,
-      purpose: "",
-    });
+    const formValues = form.getValues();
+
+    const updates: Partial<MaterialRateValues> = {
+      materialCode: formValues.materialCode,
+      description: formValues.description,
+      qtyReq: formValues.qtyReq,
+      uom: formValues.uom,
+      purpose: formValues.purpose,
+      materialGroup: formValues.materialGroup,
+      materialType: formValues.materialType,
+    };
+
+    onUpdate(data.reqId, data.srNo, updates);
+    toast.success("Material request updated successfully");
+    setOpen(false);
+  };
+
+  const handleDialogClose = () => {
+    form.reset();
     setOpen(false);
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        setOpen(v);
-        if (!v) {
-          // reset on close
-          setItems([]);
-          form.reset({
-            requestId: "",
-            serialNumber: undefined,
-            materialCode: "",
-            description: "",
-            quantityRequired: 0,
-            unitOfMeasurement: undefined,
-            purpose: "",
-          });
-        }
-      }}
-    >
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="size-8 rounded-full" size="sm">
-          <Pencil className="size-4" />
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8"
+          aria-label="Edit material request"
+        >
+          <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[720px]">
+
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Material Request</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="h-[200px] overflow-hidden">
-          {items.length > 0 && (
-            <div className="grid grid-cols-1 gap-2">
-              {items.map((it, idx) => (
-                <Card key={idx} className="p-2 shadow-none border">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm font-semibold">
-                        SR No:{" "}
-                        <span className="font-mono">{it.serialNumber}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleEditItem(idx)}
-                          aria-label="Edit item"
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleRemoveItem(idx)}
-                          aria-label="Remove item"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="text-xs space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-muted-foreground">
-                          Material Code:
-                        </span>
-                        <span className="font-medium">{it.materialCode}</span>
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-muted-foreground">Qty:</span>
-                        <span className="font-medium">
-                          {it.quantityRequired} {it.unitOfMeasurement || ""}
-                        </span>
-                        {it.description && (
-                          <>
-                            <span className="text-muted-foreground">•</span>
-                            <span className="text-muted-foreground">
-                              Details:
-                            </span>
-                            <span className="font-medium">
-                              {it.description}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Purpose:</span>
-                        <span className="font-medium">{it.purpose}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+        {/* Request Info */}
+        <div className="space-y-2 py-2 text-sm bg-muted/50 rounded-md p-3">
+          <div className="flex gap-4">
+            <div>
+              <span className="font-medium text-muted-foreground">
+                Request ID:
+              </span>{" "}
+              <span className="font-mono">{data.reqId}</span>
             </div>
-          )}
-        </ScrollArea>
+            <div>
+              <span className="font-medium text-muted-foreground">SR No:</span>{" "}
+              <span className="font-mono">{data.srNo}</span>
+            </div>
+          </div>
+        </div>
 
+        {/* Form */}
         <Form {...form}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              // We manage saving via explicit Save button below
-            }}
-            className="space-y-4"
-          >
-            <div className="flex flex-row gap-2 w-full">
-              {/* Item Code */}
-              <FormField
-                control={form.control}
-                name="materialCode"
-                render={({ field }) => (
-                  <FormItem className="w-32">
-                    <FormLabel>Material Code</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Code" {...field} />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+            {/* Material Code */}
+            <FormField
+              control={form.control}
+              name="materialCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Material Code</FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={(materialOption || []).map((m) => ({
+                        value: m.materialCode,
+                        label: m.materialCode,
+                      }))}
+                      value={field.value}
+                      onValueChange={handleMaterialCodeChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              {/* Descriptions */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>Description</FormLabel>
-                    <FormControl className="w-full">
-                      <div className="w-full max-w-full overflow-hidden">
-                        <Combobox
-                          className="w-full max-w-full"
-                          options={detailsOption}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder="Add Description"
-                          searchPlaceholder="Select Description"
-                          emptyText="No Description found."
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Description */}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={(materialOption || []).map((m) => ({
+                        value: m.description,
+                        label: m.description,
+                      }))}
+                      value={field.value}
+                      onValueChange={handleDescriptionChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <div className="flex flex-row gap-2 w-full">
-              {/* Quantity Required */}
+            {/* Quantity & UOM */}
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="quantityRequired"
+                name="qtyReq"
                 render={({ field }) => (
-                  <FormItem className="w-full">
+                  <FormItem>
                     <FormLabel>Quantity Required</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        value={
-                          Number.isFinite(field.value as number)
-                            ? String(field.value)
-                            : ""
-                        }
-                        onChange={(e) => {
-                          const num = Number(e.target.value);
-                          field.onChange(Number.isNaN(num) ? 0 : num);
-                        }}
-                      />
+                      <Input type="text" placeholder="0" {...field} />
                     </FormControl>
-                    <FormMessage className="text-xs" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
-              {/* Unit of Measurement */}
+
               <FormField
                 control={form.control}
-                name="unitOfMeasurement"
+                name="uom"
                 render={({ field }) => (
                   <FormItem className="w-full">
-                    <FormLabel>Unit of Measurement</FormLabel>
+                    <FormLabel>Unit</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., kg, pcs" {...field} />
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {unitOfMeasurement.map((uom) => (
+                            <SelectItem key={uom} value={uom}>
+                              {uom}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
-                    <FormMessage className="text-xs" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            <div className="flex flex-row justify-between items-end gap-2">
-              {/* Purpose + Add (+) */}
-              <FormField
-                control={form.control}
-                name="purpose"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>Purpose</FormLabel>
-                    <FormControl>
-                      <div className="flex flex-row gap-2">
-                        <Input placeholder="Enter Purpose" {...field} />
-                        <Button
-                          type="button"
-                          onClick={handleAddItem}
-                          aria-label="Add item"
-                        >
-                          <Plus className="" />
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Purpose */}
+            <FormField
+              control={form.control}
+              name="purpose"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Purpose</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter purpose of request" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <DialogFooter>
-              <Button type="button" onClick={handleSave} className="md:w-40">
-                Save
-              </Button>
+            {/* Footer */}
+            <DialogFooter className="flex gap-2 justify-end">
               <DialogClose asChild>
-                <Button className="md:w-40 bg-transparent" variant="outline">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleDialogClose}
+                >
                   Cancel
                 </Button>
               </DialogClose>
+              <Button type="button" onClick={handleSave}>
+                Save Changes
+              </Button>
             </DialogFooter>
           </form>
         </Form>

@@ -22,7 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
 import { buomConst, materialGroupConst, materialTypeConst } from "./constants";
 import {
   Dialog,
@@ -58,16 +57,6 @@ export default function MRCreateForm({ onAddData }: MRCreateFormProps) {
       duration: 3000,
     });
 
-    form.reset({
-      materialCode: "",
-      materialType: undefined,
-      materialGroup: undefined,
-      uom: undefined,
-      materialDescription: "",
-    });
-  };
-
-  const handleCancel = () => {
     form.reset({
       materialCode: "",
       materialType: undefined,

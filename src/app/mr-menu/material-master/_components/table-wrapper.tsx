@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import MRMaster from "./mr-request-table/mr-request-table";
-import { ColumnDef } from "@tanstack/react-table";
 import { MRMasterSchema } from "./mr-master-form/schema";
 import { getMaterialMasterColumns } from "./mr-request-table/material-master-columns";
 

@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import UserTable from "./user-table";
-import { ColumnDef } from "@tanstack/react-table";
 import { UserFormSchema } from "./schema";
 import { getUserColumns } from "./user-column";
 

@@ -1,4 +1,6 @@
-import { Badge } from "@/components/ui/badge";
+"use client";
+
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,7 +12,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Form,
   FormControl,
@@ -18,20 +20,21 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { MRRequest } from "../../types";
+import { FormValues, MRRequestApprovalProps } from "./types";
 
-interface MRRequestApprovalProps {
-  data: MRRequest;
-}
+export const MRRequestApproval = ({
+  data,
+  onUpdate,
+}: MRRequestApprovalProps) => {
+  const form = useForm<FormValues>({
+    defaultValues: {
+      qtyReq: data.qtyReq || "",
+      qtyApproved: data.qtyApproved || "",
+    },
+    mode: "onSubmit",
+  });
 
-interface FormValues {
-  quantityReq: number;
-  quantityApproved: number;
-}
-
-export const MRRequestApproval = ({ data }: MRRequestApprovalProps) => {
-  const status = data.status;
+  const status: string = data.status || "pending";
   const statusColor =
     status === "approved"
       ? "bg-green-600 text-green-50 hover:bg-green-700"
@@ -39,102 +42,100 @@ export const MRRequestApproval = ({ data }: MRRequestApprovalProps) => {
         ? "bg-yellow-600 text-yellow-50 hover:bg-yellow-700"
         : "bg-gray-500 text-gray-50 hover:bg-gray-600";
 
-  const form = useForm<FormValues>({
-    defaultValues: {
-      quantityReq: undefined,
-      quantityApproved: undefined,
-    },
-  });
-
   const handleApprove = (values: FormValues) => {
-    console.log("Approved:", data, values);
+    onUpdate(data.reqId, data.srNo, {
+      qtyReq: values.qtyReq,
+      qtyApproved: values.qtyApproved,
+      status: "approved",
+    });
   };
 
   const handleReject = () => {
-    console.log("Rejected:", data);
+    onUpdate(data.reqId, data.srNo, { status: "rejected" });
   };
 
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Badge
-          className={`w-20 px-2 py-1 rounded-full text-xs font-medium uppercase cursor-pointer ${statusColor}`}
+          className={`w-28 px-2 py-1 rounded-full text-xs font-medium uppercase cursor-pointer ${statusColor}`}
         >
           {status}
         </Badge>
       </DialogTrigger>
+
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Material Request Details</DialogTitle>
         </DialogHeader>
+
+        {/* Material Details */}
+        <div className="space-y-3 py-2 text-sm">
+          <div className="grid grid-cols-3 gap-2">
+            <span className="font-medium text-muted-foreground">
+              Request ID:
+            </span>
+            <span className="col-span-2">{data.reqId}</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <span className="font-medium text-muted-foreground">SR No:</span>
+            <span className="col-span-2">{data.srNo}</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <span className="font-medium text-muted-foreground">
+              Material Code:
+            </span>
+            <span className="col-span-2">{data.materialCode}</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <span className="font-medium text-muted-foreground">
+              Description:
+            </span>
+            <span className="col-span-2">{data.description}</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <span className="font-medium text-muted-foreground">Purpose:</span>
+            <span className="col-span-2">{data.purpose}</span>
+          </div>
+        </div>
+
+        {/* Editable Form */}
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleApprove)}
             className="space-y-4"
           >
-            <div className="space-y-3 py-4">
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <span className="font-medium text-muted-foreground">
-                  Material Code:
-                </span>
-                <span className="col-span-2">{data.material}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <span className="font-medium text-muted-foreground">
-                  Description:
-                </span>
-                <span className="col-span-2">{data.materialDescription}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <span className="font-medium text-muted-foreground">Type:</span>
-                <span className="col-span-2">{data.materialType}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <span className="font-medium text-muted-foreground">
-                  Group:
-                </span>
-                <span className="col-span-2">{data.materialGroup}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <span className="font-medium text-muted-foreground">BUOM:</span>
-                <span className="col-span-2">{data.buom}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <span className="font-medium text-muted-foreground">
-                  Status:
-                </span>
-                <span className="col-span-2">{data.status}</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-row gap-2">
+              {/* Quantity Requested */}
               <FormField
                 control={form.control}
-                name="quantityReq"
+                name="qtyReq"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity Required</FormLabel>
+                  <FormItem className="w-full">
+                    <FormLabel>Quantity Requested</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                   </FormItem>
                 )}
               />
+
+              {/* Quantity Approved */}
               <FormField
                 control={form.control}
-                name="quantityApproved"
+                name="qtyApproved"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full">
                     <FormLabel>Quantity Approved</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        onChange={(e) => field.onChange(e.target.value)}
                       />
                     </FormControl>
                   </FormItem>
@@ -142,6 +143,7 @@ export const MRRequestApproval = ({ data }: MRRequestApprovalProps) => {
               />
             </div>
 
+            {/* Dialog Footer Buttons */}
             <DialogFooter className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-4">
               <Button type="submit" variant="default" className="w-full">
                 Approve

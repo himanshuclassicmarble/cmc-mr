@@ -1,16 +1,23 @@
-import { CreateMaterialRequest } from "./components/mr-request-forms/create-material-request";
-import { mrRequestColumn } from "./components/mr-request-table/mr-request-column";
-import MRRequestTable from "./components/mr-request-table/mr-request-table";
+import { MRRequestTableWrapper } from "./components/mr-request-tablewrapper";
 import { materialRequest } from "./data";
 
 const HomeScreen = () => {
   return (
     <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-4">
-      <header className="h-14 px-4 font-bold text-foreground text-lg rounded-lg flex items-center bg-secondary ">
-        Home Screen
+      <header className="bg-card border rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-primary px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary-foreground/10 rounded-lg backdrop-blur-sm"></div>
+            <div>
+              <h1 className="text-2xl font-bold text-primary-foreground">
+                Material Request
+              </h1>
+            </div>
+          </div>
+        </div>
       </header>
-      <main>
-        <MRRequestTable data={materialRequest} columns={mrRequestColumn} />
+      <main className="bg-card border rounded-xl shadow-sm p-6">
+        <MRRequestTableWrapper data={materialRequest} />
       </main>
     </div>
   );

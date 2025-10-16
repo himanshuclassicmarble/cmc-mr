@@ -1,8 +1,6 @@
 import React from "react";
-import MasterTable from "../_components/approval-table/approval-table";
 import { userData } from "./data";
-import UserCreateForm from "./components/user-form/user-create-form";
-import { User, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { UserTableWrapper } from "./components/user-table-wrapper";
 
 export default function page() {

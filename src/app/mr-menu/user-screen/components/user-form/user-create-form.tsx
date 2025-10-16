@@ -30,10 +30,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { formSchema, UserFormSchema } from "../schema";
-import * as z from "zod";
 import { departmentConst, plantConst, roleConst } from "../constants";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 interface UserTableProps {
   onAddData: (data: UserFormSchema) => void;

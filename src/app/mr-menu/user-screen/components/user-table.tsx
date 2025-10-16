@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight, Columns3 } from "lucide-react";
-import { UserData } from "../types";
 import UserCreateForm from "./user-form/user-create-form";
 import { UserFormSchema } from "./schema";
 
@@ -50,7 +49,7 @@ export default function UserTable({
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    [],
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -129,7 +128,7 @@ export default function UserTable({
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </TableHead>
                 ))}
@@ -145,7 +144,7 @@ export default function UserTable({
                     <TableCell key={cell.id} className="px-2 py-1 text-xs">
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}

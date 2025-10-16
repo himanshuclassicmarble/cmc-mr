@@ -29,19 +29,25 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
+  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ChevronLeft, ChevronRight, Columns3 } from "lucide-react";
-import { MRRequest } from "../../types";
+import { ChevronLeft, ChevronRight, Columns3, ArrowUpDown } from "lucide-react";
 import { CreateMaterialRequest } from "../mr-request-forms/create-material-request";
 import { materialOption } from "./data";
+import { MaterialRateValues } from "../mr-request-forms/schema";
 
 interface MRRequestProps {
-  data: MRRequest[];
-  columns: ColumnDef<MRRequest>[]; // ✅ FIXED
+  data: MaterialRateValues[];
+  columns: ColumnDef<MaterialRateValues>[];
+  onAddData: (newData: MaterialRateValues) => void;
 }
 
-export default function MRRequestTable({ data, columns }: MRRequestProps) {
+export default function MRRequestTable({
+  data,
+  columns,
+  onAddData,
+}: MRRequestProps) {
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -53,12 +59,7 @@ export default function MRRequestTable({ data, columns }: MRRequestProps) {
   const table = useReactTable({
     data,
     columns,
-    state: {
-      globalFilter,
-      sorting,
-      columnFilters,
-      columnVisibility,
-    },
+    state: { globalFilter, sorting, columnFilters, columnVisibility },
     onGlobalFilterChange: setGlobalFilter,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -71,7 +72,7 @@ export default function MRRequestTable({ data, columns }: MRRequestProps) {
 
   return (
     <div className="space-y-4">
-      {/* Search + Column Toggle */}
+      {/* Search + Column Toggle + Sorting */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full">
         <div className="flex-1 max-w-sm">
           <Input
@@ -81,6 +82,7 @@ export default function MRRequestTable({ data, columns }: MRRequestProps) {
           />
         </div>
 
+        {/* Column Visibility */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -106,7 +108,47 @@ export default function MRRequestTable({ data, columns }: MRRequestProps) {
               ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <CreateMaterialRequest materialOption={materialOption} />
+
+        {/* Sorting */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <ArrowUpDown className="h-4 w-4" />
+              Sort
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {table.getAllColumns().map((col) => (
+              <DropdownMenuItem
+                key={col.id}
+                onClick={() => {
+                  const currentSort = sorting.find((s) => s.id === col.id);
+                  let newSorting: SortingState = [];
+
+                  if (!currentSort) {
+                    // Not sorted yet → sort ascending
+                    newSorting = [{ id: col.id, desc: false }];
+                  } else if (!currentSort.desc) {
+                    // Currently ascending → sort descending
+                    newSorting = [{ id: col.id, desc: true }];
+                  } else {
+                    // Currently descending → remove sorting
+                    newSorting = [];
+                  }
+
+                  setSorting(newSorting);
+                }}
+              >
+                {col.id}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <CreateMaterialRequest
+          materialOption={materialOption}
+          onAddData={onAddData}
+        />
       </div>
 
       {/* Table */}
@@ -167,7 +209,6 @@ export default function MRRequestTable({ data, columns }: MRRequestProps) {
           Page {table.getState().pagination.pageIndex + 1} of{" "}
           {table.getPageCount()}
         </div>
-
         <div className="flex gap-2">
           <Button
             variant="outline"
