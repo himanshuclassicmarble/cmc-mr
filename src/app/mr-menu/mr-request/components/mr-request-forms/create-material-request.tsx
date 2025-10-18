@@ -39,8 +39,8 @@ import { formFieldsSchema, MaterialRateValues } from "./schema";
 import { DEFAULT_FORM_VALUES, unitOfMeasurement } from "./constants";
 import { FormFields } from "./types";
 import { generateRequestId, renumberItems } from "./utils";
+import { MaterialCodeSearchField } from "./_sub-components/material-code-search";
 
-// Update MaterialOption type to include all fields
 interface MaterialOption {
   materialCode: string;
   materialType: string;
@@ -49,7 +49,6 @@ interface MaterialOption {
   materialDescription: string;
 }
 
-// Update MaterialRequestProps type
 interface MaterialRequestProps {
   materialOption: MaterialOption[];
   onAddData: (newData: MaterialRateValues) => void;
@@ -61,6 +60,10 @@ export function CreateMaterialRequest({
 }: MaterialRequestProps) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<MaterialRateValues[]>([]);
+  const [currentReqId, setCurrentReqId] = useState<string>("");
+  const [newMaterial, setNewMaterial] = useState<boolean>(false);
+  const [selectedMaterial, setSelectedMaterial] =
+    useState<MaterialOption | null>(null);
 
   const form = useForm<FormFields>({
     resolver: zodResolver(formFieldsSchema),
@@ -70,33 +73,20 @@ export function CreateMaterialRequest({
 
   // ==================== Material Selection Handlers ====================
 
-  const handleMaterialCodeChange = (code: string) => {
-    const selectedMaterial = materialOption.find(
-      (m) => m.materialCode === code,
-    );
-
-    if (selectedMaterial) {
-      form.setValue("materialCode", code, { shouldValidate: true });
-      form.setValue("description", selectedMaterial.materialDescription || "");
-      form.setValue("uom", selectedMaterial.uom || "");
-      // Optionally set materialType and materialGroup in the form if they are part of FormFields
-      // form.setValue("materialType", selectedMaterial.materialType || "");
-      // form.setValue("materialGroup", selectedMaterial.materialGroup || "");
-    }
+  const handleMaterialFound = (material: MaterialOption) => {
+    setSelectedMaterial(material);
   };
 
   const handleDescriptionChange = (description: string) => {
-    const selectedMaterial = materialOption.find(
+    const material = materialOption.find(
       (m) => m.materialDescription === description,
     );
 
-    if (selectedMaterial) {
+    if (material) {
       form.setValue("description", description, { shouldValidate: true });
-      form.setValue("materialCode", selectedMaterial.materialCode || "");
-      form.setValue("uom", selectedMaterial.uom || "");
-      // Optionally set materialType and materialGroup in the form if they are part of FormFields
-      // form.setValue("materialType", selectedMaterial.materialType || "");
-      // form.setValue("materialGroup", selectedMaterial.materialGroup || "");
+      form.setValue("materialCode", material.materialCode || "");
+      form.setValue("uom", material.uom || "");
+      setSelectedMaterial(material);
     }
   };
 
@@ -111,17 +101,20 @@ export function CreateMaterialRequest({
     }
 
     const formValues = form.getValues();
-    const selectedMaterial = materialOption.find(
-      (m) => m.materialCode === formValues.materialCode,
-    );
+
+    // Generate reqId only once for the first item
+    const reqId = currentReqId || generateRequestId();
+    if (!currentReqId) {
+      setCurrentReqId(reqId);
+    }
 
     const newItem: MaterialRateValues = {
-      reqId: generateRequestId(),
+      reqId: reqId,
       srNo: String(items.length * 10 + 10),
       materialCode: formValues.materialCode,
       description: formValues.description,
-      materialGroup: selectedMaterial?.materialGroup || "",
-      materialType: selectedMaterial?.materialType || "",
+      materialGroup: newMaterial ? "" : selectedMaterial?.materialGroup || "",
+      materialType: newMaterial ? "" : selectedMaterial?.materialType || "",
       qtyReq: formValues.qtyReq,
       qtyApproved: "",
       qtyIssued: "",
@@ -135,8 +128,12 @@ export function CreateMaterialRequest({
     };
 
     setItems((prev) => [...prev, newItem]);
-    toast.success("Item added successfully");
+    toast.success(
+      newMaterial ? "New material item added" : "Item added successfully",
+    );
     form.reset(DEFAULT_FORM_VALUES);
+    setNewMaterial(false);
+    setSelectedMaterial(null);
   };
 
   const handleEditItem = (index: number) => {
@@ -151,10 +148,19 @@ export function CreateMaterialRequest({
       qtyReq: itemToEdit.qtyReq,
       uom: itemToEdit.uom,
       purpose: itemToEdit.purpose,
-      // Optionally include materialType and materialGroup if they are part of FormFields
-      // materialType: itemToEdit.materialType,
-      // materialGroup: itemToEdit.materialGroup,
     });
+
+    // Set material context for editing
+    if (itemToEdit.materialCode === "0") {
+      setNewMaterial(true);
+    } else {
+      const material = materialOption.find(
+        (m) => m.materialCode === itemToEdit.materialCode,
+      );
+      if (material) {
+        setSelectedMaterial(material);
+      }
+    }
   };
 
   const handleRemoveItem = (index: number) => {
@@ -165,6 +171,9 @@ export function CreateMaterialRequest({
 
   const handleDialogClose = () => {
     setItems([]);
+    setCurrentReqId("");
+    setNewMaterial(false);
+    setSelectedMaterial(null);
     form.reset(DEFAULT_FORM_VALUES);
     setOpen(false);
   };
@@ -194,35 +203,36 @@ export function CreateMaterialRequest({
 
         {/* Items Preview */}
         <ScrollArea className="h-[200px]">
-          <Card className="p-2 pr-3 shadow-none">
+          <Card className="p-2 shadow-none border-0">
             {items.length > 0 ? (
               <div className="space-y-2">
                 {items.map((item, index) => (
                   <Card
                     key={`${item.reqId}-${index}`}
-                    className="p-3 shadow-none border bg-muted/20"
+                    className="p-2 gap-2 shadow-sm border bg-card hover:bg-accent/30 transition-colors"
                   >
                     {/* Header */}
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold">
-                        SR No: <span className="font-mono">{item.srNo}</span>
+                    <div className="flex items-center justify-between border-b pb-1.5">
+                      <span className="text-xs font-semibold tracking-wide text-muted-foreground">
+                        SR No:{" "}
+                        <span className="font-mono text-sm text-foreground">
+                          {item.srNo}
+                        </span>
                       </span>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="h-6 w-6"
                           onClick={() => handleEditItem(index)}
-                          aria-label="Edit item"
                         >
                           <Pencil className="h-3 w-3" />
                         </Button>
                         <Button
-                          variant="destructive"
+                          variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="h-6 w-6 text-destructive hover:bg-destructive/10"
                           onClick={() => handleRemoveItem(index)}
-                          aria-label="Remove item"
                         >
                           <X className="h-3 w-3" />
                         </Button>
@@ -230,21 +240,31 @@ export function CreateMaterialRequest({
                     </div>
 
                     {/* Details */}
-                    <div className="text-xs space-y-1.5">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                      <div className="flex items-center gap-1">
                         <span className="text-muted-foreground">Material:</span>
                         <span className="font-medium">{item.materialCode}</span>
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-muted-foreground">Type:</span>
-                        <span className="font-medium">{item.materialType}</span>
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-muted-foreground">Group:</span>
-                        <span className="font-medium">
-                          {item.materialGroup}
-                        </span>
                       </div>
 
-                      <div className="flex items-center gap-2 flex-wrap">
+                      {item.materialType && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">Type:</span>
+                          <span className="font-medium">
+                            {item.materialType}
+                          </span>
+                        </div>
+                      )}
+
+                      {item.materialGroup && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">Group:</span>
+                          <span className="font-medium">
+                            {item.materialGroup}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-1">
                         <span className="text-muted-foreground">Qty:</span>
                         <span className="font-medium">
                           {item.qtyReq} {item.uom}
@@ -252,21 +272,21 @@ export function CreateMaterialRequest({
                       </div>
 
                       {item.description && (
-                        <div className="flex items-start gap-2">
-                          <span className="text-muted-foreground shrink-0">
+                        <div className="col-span-2 flex gap-1">
+                          <span className="text-muted-foreground">
                             Description:
                           </span>
-                          <span className="font-medium">
+                          <span className="font-medium break-words">
                             {item.description}
                           </span>
                         </div>
                       )}
 
-                      <div className="flex items-start gap-2">
-                        <span className="text-muted-foreground shrink-0">
-                          Purpose:
+                      <div className="col-span-2 flex gap-1">
+                        <span className="text-muted-foreground">Purpose:</span>
+                        <span className="font-medium break-words">
+                          {item.purpose}
                         </span>
-                        <span className="font-medium">{item.purpose}</span>
                       </div>
                     </div>
                   </Card>
@@ -286,29 +306,13 @@ export function CreateMaterialRequest({
         {/* Form */}
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-            {/* Material Code */}
-            <FormField
-              control={form.control}
+            <MaterialCodeSearchField
               name="materialCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Material Code</FormLabel>
-                  <FormControl>
-                    <Combobox
-                      options={materialOption.map((m) => ({
-                        value: m.materialCode,
-                        label: m.materialCode,
-                      }))}
-                      value={field.value}
-                      onValueChange={handleMaterialCodeChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              materialOptions={materialOption}
+              setNewMaterial={setNewMaterial}
+              onMaterialFound={handleMaterialFound}
             />
 
-            {/* Description */}
             <FormField
               control={form.control}
               name="description"
@@ -316,21 +320,27 @@ export function CreateMaterialRequest({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Combobox
-                      options={materialOption.map((m) => ({
-                        value: m.materialDescription,
-                        label: m.materialDescription,
-                      }))}
-                      value={field.value}
-                      onValueChange={handleDescriptionChange}
-                    />
+                    {newMaterial ? (
+                      <Input
+                        placeholder="Enter material description"
+                        {...field}
+                      />
+                    ) : (
+                      <Combobox
+                        options={materialOption.map((m) => ({
+                          value: m.materialDescription,
+                          label: m.materialDescription,
+                        }))}
+                        value={field.value}
+                        onValueChange={handleDescriptionChange}
+                      />
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Quantity & UOM */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -339,7 +349,7 @@ export function CreateMaterialRequest({
                   <FormItem>
                     <FormLabel>Quantity Required</FormLabel>
                     <FormControl>
-                      <Input type="text" placeholder="0" {...field} />
+                      <Input type="number" placeholder="0" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -353,21 +363,29 @@ export function CreateMaterialRequest({
                   <FormItem className="w-full">
                     <FormLabel>Unit</FormLabel>
                     <FormControl>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select Unit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {unitOfMeasurement.map((uom) => (
-                            <SelectItem key={uom} value={uom}>
-                              {uom}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {newMaterial ? (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Unit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {unitOfMeasurement.map((uom) => (
+                              <SelectItem key={uom} value={uom}>
+                                {uom}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          {...field}
+                          disabled
+                          className="bg-muted cursor-not-allowed"
+                        />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -375,7 +393,6 @@ export function CreateMaterialRequest({
               />
             </div>
 
-            {/* Purpose */}
             <FormField
               control={form.control}
               name="purpose"
@@ -403,7 +420,6 @@ export function CreateMaterialRequest({
               )}
             />
 
-            {/* Footer */}
             <DialogFooter className="flex gap-2 justify-end">
               <DialogClose asChild>
                 <Button type="button" variant="outline">

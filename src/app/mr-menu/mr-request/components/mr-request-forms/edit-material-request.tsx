@@ -32,21 +32,12 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Pencil } from "lucide-react";
 
-import { Combobox } from "./_sub-components/combobox";
 import { formFieldsSchema, MaterialRateValues } from "./schema";
 import { unitOfMeasurement } from "./constants";
-import { FormFields } from "./types";
-import { MaterialOption } from "../mr-request-table/types";
-
-interface EditMaterialRequestProps {
-  data: MaterialRateValues;
-  materialOption: MaterialOption[];
-  onUpdate: (
-    reqId: string,
-    srNo: string,
-    updates: Partial<MaterialRateValues>,
-  ) => void;
-}
+import { EditMaterialRequestProps, FormFields } from "./types";
+import { MaterialCodeSearchField } from "./_sub-components/material-code-search";
+import { MaterialMaster } from "@/app/mr-menu/material-master/types";
+import { Combobox } from "./_sub-components/combobox";
 
 export function EditMaterialRequest({
   data,
@@ -54,6 +45,9 @@ export function EditMaterialRequest({
   onUpdate,
 }: EditMaterialRequestProps) {
   const [open, setOpen] = useState(false);
+  const [newMaterial, setNewMaterial] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] =
+    useState<MaterialMaster | null>(null);
 
   const form = useForm<FormFields>({
     resolver: zodResolver(formFieldsSchema),
@@ -67,6 +61,21 @@ export function EditMaterialRequest({
     mode: "onBlur",
   });
 
+  // description update when combobox changes
+  const handleDescriptionChange = (description: string) => {
+    const material = materialOption.find(
+      (m) => m.materialDescription === description,
+    );
+
+    if (material) {
+      form.setValue("description", description, { shouldValidate: true });
+      form.setValue("materialCode", material.materialCode || "");
+      form.setValue("uom", material.uom || "");
+      setSelectedMaterial(material);
+    }
+  };
+
+  // reset everything whenever dialog opens and auto-detect if new material
   useEffect(() => {
     if (open) {
       form.reset({
@@ -76,45 +85,29 @@ export function EditMaterialRequest({
         uom: data.uom || "",
         purpose: data.purpose || "",
       });
+
+      // Check if this is a new material by looking for it in materialOption
+      const isNewMaterial = !materialOption.some(
+        (m) => m.materialCode === data.materialCode,
+      );
+      setNewMaterial(isNewMaterial);
+
+      // Set selected material if it exists
+      const material = materialOption.find(
+        (m) => m.materialCode === data.materialCode,
+      );
+      setSelectedMaterial(material || null);
     }
-  }, [open, data, form]);
-
-  // ==================== Material Selection Handlers ====================
-
-  const handleMaterialCodeChange = (code: string) => {
-    const selectedMaterial = materialOption.find(
-      (m) => m.materialCode === code,
-    );
-
-    if (selectedMaterial) {
-      form.setValue("materialCode", code, { shouldValidate: true });
-      form.setValue("description", selectedMaterial.description || "");
-    }
-  };
-
-  const handleDescriptionChange = (description: string) => {
-    const selectedMaterial = materialOption.find(
-      (m) => m.description === description,
-    );
-
-    if (selectedMaterial) {
-      form.setValue("description", description, { shouldValidate: true });
-      form.setValue("materialCode", selectedMaterial.materialCode || "");
-    }
-  };
-
-  // ==================== Save Handler ====================
+  }, [open, data, form, materialOption]);
 
   const handleSave = async () => {
     const isValid = await form.trigger();
-
     if (!isValid) {
       toast.error("Please fix validation errors before saving.");
       return;
     }
 
     const formValues = form.getValues();
-
     const updates: Partial<MaterialRateValues> = {
       materialCode: formValues.materialCode,
       description: formValues.description,
@@ -130,7 +123,16 @@ export function EditMaterialRequest({
 
   const handleDialogClose = () => {
     form.reset();
+    setNewMaterial(false);
+    setSelectedMaterial(null);
     setOpen(false);
+  };
+
+  const handleMaterialFound = (material: MaterialMaster) => {
+    form.setValue("materialCode", material.materialCode || "");
+    form.setValue("description", material.materialDescription || "");
+    form.setValue("uom", material.uom || "");
+    setSelectedMaterial(material);
   };
 
   return (
@@ -170,26 +172,12 @@ export function EditMaterialRequest({
         {/* Form */}
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-            {/* Material Code */}
-            <FormField
-              control={form.control}
+            {/* Material Code Search */}
+            <MaterialCodeSearchField
               name="materialCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Material Code</FormLabel>
-                  <FormControl>
-                    <Combobox
-                      options={(materialOption || []).map((m) => ({
-                        value: m.materialCode,
-                        label: m.materialCode,
-                      }))}
-                      value={field.value}
-                      onValueChange={handleMaterialCodeChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              materialOptions={materialOption}
+              setNewMaterial={setNewMaterial}
+              onMaterialFound={handleMaterialFound}
             />
 
             {/* Description */}
@@ -200,14 +188,27 @@ export function EditMaterialRequest({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Combobox
-                      options={(materialOption || []).map((m) => ({
-                        value: m.description,
-                        label: m.description,
-                      }))}
-                      value={field.value}
-                      onValueChange={handleDescriptionChange}
-                    />
+                    {newMaterial ? (
+                      // new material → editable input
+                      <Input
+                        placeholder="Enter material description"
+                        {...field}
+                      />
+                    ) : (
+                      // existing material → combobox (editable)
+                      <Combobox
+                        options={materialOption.map((m) => ({
+                          value: m.materialDescription,
+                          label: m.materialDescription,
+                        }))}
+                        value={field.value}
+                        onValueChange={(val) => {
+                          field.onChange(val);
+                          handleDescriptionChange(val);
+                        }}
+                        disabled={false}
+                      />
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -237,21 +238,26 @@ export function EditMaterialRequest({
                   <FormItem className="w-full">
                     <FormLabel>Unit</FormLabel>
                     <FormControl>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select Unit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {unitOfMeasurement.map((uom) => (
-                            <SelectItem key={uom} value={uom}>
-                              {uom}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {newMaterial ? (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Unit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {unitOfMeasurement.map((uom) => (
+                              <SelectItem key={uom} value={uom}>
+                                {uom}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        // existing material → editable input
+                        <Input {...field} disabled readOnly />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>

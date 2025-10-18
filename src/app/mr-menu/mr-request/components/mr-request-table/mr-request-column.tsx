@@ -2,8 +2,8 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { MRRequestApproval } from "../mr-request-forms/mr-request-approval";
 import { MaterialRateValues } from "../mr-request-forms/schema";
-import { MaterialOption } from "./types";
 import { EditMaterialRequest } from "../mr-request-forms/edit-material-request";
+import { MaterialMaster } from "@/app/mr-menu/material-master/types";
 
 export const getMRRequestColumns = (
   onUpdate: (
@@ -11,7 +11,7 @@ export const getMRRequestColumns = (
     srNo: string,
     updatedData: Partial<MaterialRateValues>,
   ) => void,
-  materialOption: MaterialOption[],
+  materialOption: MaterialMaster[],
 ): ColumnDef<MaterialRateValues>[] => [
   {
     accessorKey: "reqId",
@@ -85,6 +85,7 @@ export const getMRRequestColumns = (
     header: "Actions",
     cell: ({ row }) => (
       <EditMaterialRequest
+        key={`${row.original.reqId}-${row.original.srNo}`}
         data={row.original}
         materialOption={materialOption}
         onUpdate={onUpdate}

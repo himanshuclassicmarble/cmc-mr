@@ -20,6 +20,7 @@ import {
 export interface ComboboxOption {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
 interface ComboboxProps {
@@ -31,6 +32,7 @@ interface ComboboxProps {
   emptyText?: string;
   className?: string;
   disabled?: boolean;
+  maxHeight?: string;
 }
 
 export function Combobox({
@@ -42,12 +44,12 @@ export function Combobox({
   emptyText = "No option found.",
   className,
   disabled = false,
+  maxHeight = "300px",
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
 
-  const selectedOption = (options ?? []).find(
-    (option) => option.value === value,
-  );
+  const selectedOption = options.find((option) => option.value === value);
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -62,33 +64,38 @@ export function Combobox({
             className,
           )}
         >
-          {selectedOption ? selectedOption.label : placeholder}
+          <span className="truncate">
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+      >
         <Command>
           <CommandInput placeholder={searchPlaceholder} className="h-9" />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
-            <CommandGroup>
+            <CommandGroup className="overflow-auto" style={{ maxHeight }}>
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    const newValue = currentValue === value ? "" : currentValue;
-                    onValueChange?.(newValue);
+                  value={option.label} // ✅ Command filters on this value
+                  disabled={option.disabled}
+                  onSelect={() => {
+                    onValueChange?.(option.value);
                     setOpen(false);
                   }}
                 >
-                  {option.label}
                   <Check
                     className={cn(
-                      "ml-auto h-4 w-4",
+                      "mr-2 h-4 w-4",
                       value === option.value ? "opacity-100" : "opacity-0",
                     )}
                   />
+                  {option.label}
                 </CommandItem>
               ))}
             </CommandGroup>

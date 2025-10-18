@@ -28,8 +28,8 @@ export const MRRequestApproval = ({
 }: MRRequestApprovalProps) => {
   const form = useForm<FormValues>({
     defaultValues: {
-      qtyReq: data.qtyReq || "",
-      qtyApproved: data.qtyApproved || "",
+      qtyReq: data.qtyReq?.toString() || "",
+      qtyApproved: data.qtyReq?.toString() || "",
     },
     mode: "onSubmit",
   });
@@ -120,11 +120,7 @@ export const MRRequestApproval = ({
                   <FormItem className="w-full">
                     <FormLabel>Quantity Requested</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value)}
-                      />
+                      <Input type="string" {...field} readOnly disabled />
                     </FormControl>
                   </FormItem>
                 )}

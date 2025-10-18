@@ -3,7 +3,7 @@ import { useState } from "react";
 import { MaterialRateValues } from "./mr-request-forms/schema";
 import MRRequestTable from "./mr-request-table/mr-request-table";
 import { getMRRequestColumns } from "./mr-request-table/mr-request-column";
-import { materialOption } from "./mr-request-table/data";
+import { materialMaster } from "../../material-master/data";
 
 interface MRRequestTableWrapperProps {
   data: MaterialRateValues[];
@@ -35,7 +35,7 @@ export const MRRequestTableWrapper = ({ data }: MRRequestTableWrapperProps) => {
       data={tableData}
       columns={getMRRequestColumns(
         handleUpdateData,
-        Array.isArray(materialOption) ? materialOption : [],
+        Array.isArray(materialMaster) ? materialMaster : [],
       )}
       onAddData={handleAddData}
     />

@@ -1,8 +1,8 @@
-import { MaterialOption } from "../mr-request-table/types";
+import { MaterialMaster } from "@/app/mr-menu/material-master/types";
 import { MaterialRateValues } from "./schema";
 
 export interface MaterialRequestProps {
-  materialOption: MaterialOption[];
+  materialOption: MaterialMaster[];
   onAddData: (newData: MaterialRateValues) => void;
 }
 export type FormFields = {
@@ -23,6 +23,15 @@ export interface MRRequestApprovalProps {
   ) => void;
 }
 
+export interface EditMaterialRequestProps {
+  data: MaterialRateValues;
+  materialOption: MaterialMaster[];
+  onUpdate: (
+    reqId: string,
+    srNo: string,
+    updates: Partial<MaterialRateValues>,
+  ) => void;
+}
 // mr approval form values
 export interface FormValues {
   qtyReq: string;

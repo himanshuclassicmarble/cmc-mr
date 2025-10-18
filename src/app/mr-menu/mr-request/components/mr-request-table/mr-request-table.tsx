@@ -31,9 +31,17 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ChevronLeft, ChevronRight, Columns3, ArrowUpDown } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Columns3,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 import { CreateMaterialRequest } from "../mr-request-forms/create-material-request";
 import { MaterialRateValues } from "../mr-request-forms/schema";
 import { materialMaster } from "@/app/mr-menu/material-master/data";
@@ -160,31 +168,53 @@ export default function MRRequestTable({
                 Sort
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              {table.getAllColumns().map((col) => (
-                <DropdownMenuItem
-                  key={col.id}
-                  onClick={() => {
-                    const currentSort = sorting.find((s) => s.id === col.id);
-                    let newSorting: SortingState = [];
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Sort by Column</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {table.getAllColumns().map((col) => {
+                const currentSort = sorting.find((s) => s.id === col.id);
+                const isAscending = currentSort && !currentSort.desc;
+                const isDescending = currentSort && currentSort.desc;
 
-                    if (!currentSort) {
-                      // Not sorted yet → sort ascending
-                      newSorting = [{ id: col.id, desc: false }];
-                    } else if (!currentSort.desc) {
-                      // Currently ascending → sort descending
-                      newSorting = [{ id: col.id, desc: true }];
-                    } else {
-                      // Currently descending → remove sorting
-                      newSorting = [];
-                    }
-
-                    setSorting(newSorting);
-                  }}
-                >
-                  {col.id}
-                </DropdownMenuItem>
-              ))}
+                return (
+                  <div key={col.id} className="px-2 py-1.5">
+                    <div className="font-medium text-sm mb-1">{col.id}</div>
+                    <div className="flex gap-1">
+                      <Button
+                        variant={isAscending ? "default" : "outline"}
+                        size="sm"
+                        className="flex-1 h-8 text-xs"
+                        onClick={() =>
+                          setSorting([{ id: col.id, desc: false }])
+                        }
+                      >
+                        <ArrowUp className="h-3 w-3 mr-1" />
+                        Asc
+                      </Button>
+                      <Button
+                        variant={isDescending ? "default" : "outline"}
+                        size="sm"
+                        className="flex-1 h-8 text-xs"
+                        onClick={() => setSorting([{ id: col.id, desc: true }])}
+                      >
+                        <ArrowDown className="h-3 w-3 mr-1" />
+                        Desc
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+              {sorting.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setSorting([])}
+                    className="text-xs text-muted-foreground"
+                  >
+                    Clear sorting
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

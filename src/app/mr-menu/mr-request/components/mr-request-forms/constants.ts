@@ -1,8 +1,5 @@
 import { FormFields } from "./types";
 
-// Material details (optional, for comboboxes)
-export const materialDetailsConst = ["Some Details", "SomeDetails 2"];
-
 // Unit of Measurement
 export const unitOfMeasurement = ["L", "M", "NOS", "SET", "FT", "KG", "PAC"];
 
