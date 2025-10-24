@@ -28,13 +28,14 @@ export const MRRequestApproval = ({
 }: MRRequestApprovalProps) => {
   const form = useForm<FormValues>({
     defaultValues: {
-      qtyReq: data.qtyReq?.toString() || "",
-      qtyApproved: data.qtyReq?.toString() || "",
+      qtyReq: data.qtyReq ?? 0,
+      qtyApproved: data.qtyReq ?? 0,
     },
     mode: "onSubmit",
   });
 
   const status: string = data.status || "pending";
+
   const statusColor =
     status === "approved"
       ? "bg-green-600 text-green-50 hover:bg-green-700"
@@ -77,32 +78,18 @@ export const MRRequestApproval = ({
 
         {/* Material Details */}
         <div className="space-y-3 py-2 text-sm">
-          <div className="grid grid-cols-3 gap-2">
-            <span className="font-medium text-muted-foreground">
-              Request ID:
-            </span>
-            <span className="col-span-2">{data.reqId}</span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <span className="font-medium text-muted-foreground">SR No:</span>
-            <span className="col-span-2">{data.srNo}</span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <span className="font-medium text-muted-foreground">
-              Material Code:
-            </span>
-            <span className="col-span-2">{data.materialCode}</span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <span className="font-medium text-muted-foreground">
-              Description:
-            </span>
-            <span className="col-span-2">{data.description}</span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <span className="font-medium text-muted-foreground">Purpose:</span>
-            <span className="col-span-2">{data.purpose}</span>
-          </div>
+          {[
+            ["Request ID:", data.reqId],
+            ["SR No:", data.srNo],
+            ["Material Code:", data.materialCode],
+            ["Description:", data.description],
+            ["Purpose:", data.purpose],
+          ].map(([label, value]) => (
+            <div key={label} className="grid grid-cols-3 gap-2">
+              <span className="font-medium text-muted-foreground">{label}</span>
+              <span className="col-span-2">{value}</span>
+            </div>
+          ))}
         </div>
 
         {/* Editable Form */}
@@ -112,7 +99,7 @@ export const MRRequestApproval = ({
             className="space-y-4"
           >
             <div className="flex flex-row gap-2">
-              {/* Quantity Requested */}
+              {/* Quantity Requested (read-only) */}
               <FormField
                 control={form.control}
                 name="qtyReq"
@@ -120,13 +107,13 @@ export const MRRequestApproval = ({
                   <FormItem className="w-full">
                     <FormLabel>Quantity Requested</FormLabel>
                     <FormControl>
-                      <Input type="string" {...field} readOnly disabled />
+                      <Input type="number" {...field} readOnly disabled />
                     </FormControl>
                   </FormItem>
                 )}
               />
 
-              {/* Quantity Approved */}
+              {/* Quantity Approved (editable) */}
               <FormField
                 control={form.control}
                 name="qtyApproved"
@@ -136,8 +123,16 @@ export const MRRequestApproval = ({
                     <FormControl>
                       <Input
                         type="number"
+                        min="0"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        value={field.value ?? 0}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === ""
+                              ? null
+                              : e.target.valueAsNumber,
+                          )
+                        }
                       />
                     </FormControl>
                   </FormItem>

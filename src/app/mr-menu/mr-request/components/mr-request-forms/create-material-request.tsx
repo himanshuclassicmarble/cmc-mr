@@ -9,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
@@ -388,6 +387,7 @@ export function CreateMaterialRequest({
                       <Input
                         type="number"
                         placeholder="0"
+                        min="0"
                         {...field}
                         onChange={(e) =>
                           field.onChange(e.target.valueAsNumber || 0)

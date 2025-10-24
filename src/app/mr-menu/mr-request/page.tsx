@@ -1,5 +1,5 @@
 import { MRRequestTableWrapper } from "./components/mr-request-tablewrapper";
-import { materialRequest } from "./data";
+import { materialRequest } from "./utils";
 
 const HomeScreen = () => {
   return (

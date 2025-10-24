@@ -1,6 +1,23 @@
-import { MaterialRateValues } from "./components/mr-request-forms/schema";
+type MaterialData = {
+  reqId: string;
+  srNo: string;
+  materialCode: string;
+  description: string;
+  materialGroup: string;
+  qtyReq: string;
+  qtyApproved: string;
+  qtyIssued: string;
+  uom: string;
+  materialType: string;
+  purpose: string;
+  status: string;
+  createdDate: string;
+  approvalDate: string;
+  createdBy: string;
+  approvedBy: string;
+};
 
-export const materialRequest: MaterialRateValues[] = [
+export const materialData: MaterialData[] = [
   {
     reqId: "MR2500004",
     srNo: "10",

@@ -8,7 +8,7 @@ export interface MaterialRequestProps {
 export type FormFields = {
   materialCode: string;
   description: string;
-  qtyReq: number | undefined;
+  qtyReq: number;
   uom: string;
   purpose: string;
 };

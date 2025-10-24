@@ -54,7 +54,7 @@ export function EditMaterialRequest({
     defaultValues: {
       materialCode: data.materialCode || "",
       description: data.description || "",
-      qtyReq: data.qtyReq || "",
+      qtyReq: data.qtyReq || 0,
       uom: data.uom || "",
       purpose: data.purpose || "",
     },
@@ -81,7 +81,7 @@ export function EditMaterialRequest({
       form.reset({
         materialCode: data.materialCode || "",
         description: data.description || "",
-        qtyReq: data.qtyReq || "",
+        qtyReq: data.qtyReq || 0,
         uom: data.uom || "",
         purpose: data.purpose || "",
       });
@@ -224,7 +224,13 @@ export function EditMaterialRequest({
                   <FormItem>
                     <FormLabel>Quantity Required</FormLabel>
                     <FormControl>
-                      <Input type="text" placeholder="0" {...field} />
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
