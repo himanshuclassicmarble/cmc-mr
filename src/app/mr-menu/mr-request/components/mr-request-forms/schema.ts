@@ -11,18 +11,27 @@ export const materialRateSchema = z.object({
   srNo: z.string().min(1, "Required"),
   materialCode: z.string().min(1, "Required"),
   description: z.string().min(1, "Required"),
-  materialGroup: z.string().refine((val) => materialGroups.includes(val), {
-    message: "Material Group is required",
-  }),
-  qtyReq: z.string().min(1, "Required"),
-  qtyApproved: z.string().optional(),
-  qtyIssued: z.string().optional(),
+  materialGroup: z
+    .string()
+    .refine((val) => !val || materialGroups.includes(val), {
+      message: "Invalid Material Group",
+    })
+    .optional(),
+  qtyReq: z.coerce.number().min(0, "Quantity cannot be negative"),
+  qtyApproved: z.coerce
+    .number()
+    .min(0, "Quantity cannot be negative")
+    .optional(),
+  qtyIssued: z.coerce.number().min(0, "Quantity cannot be negative").optional(),
   uom: z.string().refine((val) => unitOfMeasurement.includes(val), {
     message: "Unit of Measurement is required",
   }),
-  materialType: z.string().refine((val) => materialTypes.includes(val), {
-    message: "Material Type is required",
-  }),
+  materialType: z
+    .string()
+    .refine((val) => !val || materialTypes.includes(val), {
+      message: "Invalid Material Type",
+    })
+    .optional(),
   purpose: z.string().min(1, "Required"),
   status: z.string().refine((val) => statusConst.includes(val), {
     message: "Status is required",
@@ -35,11 +44,12 @@ export const materialRateSchema = z.object({
 
 export type MaterialRateValues = z.infer<typeof materialRateSchema>;
 
-// Schema for the Form fields in the create and edit form for the material request
-export const formFieldsSchema = materialRateSchema.pick({
-  materialCode: true,
-  description: true,
-  qtyReq: true,
-  uom: true,
-  purpose: true,
+export const formFieldsSchema = z.object({
+  materialCode: z.string().min(1, "Material code is required"),
+  description: z.string().min(1, "Description is required"),
+  qtyReq: z.number().min(0, "Quantity cannot be negative"),
+  uom: z.string().min(1, "Unit of measurement is required"),
+  purpose: z.string().min(1, "Purpose is required"),
 });
+
+export type FormFieldsType = z.infer<typeof formFieldsSchema>;

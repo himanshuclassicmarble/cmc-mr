@@ -22,7 +22,7 @@ export const statusConst = [
 export const DEFAULT_FORM_VALUES: FormFields = {
   materialCode: "",
   description: "",
-  qtyReq: "",
+  qtyReq: 0,
   uom: "L",
   purpose: "",
 };

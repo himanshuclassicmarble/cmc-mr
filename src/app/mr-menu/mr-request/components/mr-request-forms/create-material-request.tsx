@@ -35,11 +35,11 @@ import { toast } from "sonner";
 import { Plus, Pencil, X } from "lucide-react";
 
 import { Combobox } from "./_sub-components/combobox";
-import { formFieldsSchema, MaterialRateValues } from "./schema";
+import { formFieldsSchema, MaterialRateValues, FormFieldsType } from "./schema";
 import { DEFAULT_FORM_VALUES, unitOfMeasurement } from "./constants";
-import { FormFields } from "./types";
 import { generateRequestId, renumberItems } from "./utils";
 import { MaterialCodeSearchField } from "./_sub-components/material-code-search";
+import { Separator } from "@/components/ui/separator";
 
 interface MaterialOption {
   materialCode: string;
@@ -65,7 +65,7 @@ export function CreateMaterialRequest({
   const [selectedMaterial, setSelectedMaterial] =
     useState<MaterialOption | null>(null);
 
-  const form = useForm<FormFields>({
+  const form = useForm<FormFieldsType>({
     resolver: zodResolver(formFieldsSchema),
     defaultValues: DEFAULT_FORM_VALUES,
     mode: "onBlur",
@@ -113,11 +113,11 @@ export function CreateMaterialRequest({
       srNo: String(items.length * 10 + 10),
       materialCode: formValues.materialCode,
       description: formValues.description,
-      materialGroup: newMaterial ? "" : selectedMaterial?.materialGroup || "",
-      materialType: newMaterial ? "" : selectedMaterial?.materialType || "",
+      materialGroup: newMaterial ? undefined : selectedMaterial?.materialGroup,
+      materialType: newMaterial ? undefined : selectedMaterial?.materialType,
       qtyReq: formValues.qtyReq,
-      qtyApproved: "",
-      qtyIssued: "",
+      qtyApproved: undefined,
+      qtyIssued: undefined,
       uom: formValues.uom,
       purpose: formValues.purpose,
       status: "pending",
@@ -190,20 +190,34 @@ export function CreateMaterialRequest({
     handleDialogClose();
   };
 
+  const handleCancel = () => {
+    setItems([]);
+
+    setCurrentReqId("");
+
+    setNewMaterial(false);
+    setSelectedMaterial(null);
+
+    form.reset(DEFAULT_FORM_VALUES);
+
+    setOpen(false);
+
+    toast.message("Form has been cleared");
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>Create Material Request</Button>
       </DialogTrigger>
 
-      <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto p-3 gap-2">
         <DialogHeader>
           <DialogTitle>Create Material Request</DialogTitle>
         </DialogHeader>
 
-        {/* Items Preview */}
-        <ScrollArea className="h-[200px]">
-          <Card className="p-2 shadow-none border-0">
+        <ScrollArea className="h-[200px] bg-card rounded-md ">
+          <div className="p-2 shadow-none border-0">
             {items.length > 0 ? (
               <div className="space-y-2">
                 {items.map((item, index) => (
@@ -300,10 +314,32 @@ export function CreateMaterialRequest({
                 </p>
               </div>
             )}
-          </Card>
+          </div>
         </ScrollArea>
 
-        {/* Form */}
+        <div className="flex justify-end gap-2">
+          <DialogClose asChild>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleCancel}
+            >
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleSave}
+            disabled={items.length === 0}
+          >
+            Save {items.length > 0 && `(${items.length})`}
+          </Button>
+        </div>
+
+        <Separator orientation="horizontal" />
+
         <Form {...form}>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
             <MaterialCodeSearchField
@@ -349,7 +385,14 @@ export function CreateMaterialRequest({
                   <FormItem>
                     <FormLabel>Quantity Required</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} />
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(e.target.valueAsNumber || 0)
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -400,40 +443,24 @@ export function CreateMaterialRequest({
                 <FormItem>
                   <FormLabel>Purpose</FormLabel>
                   <FormControl>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Enter purpose of request"
-                        {...field}
-                      />
-                      <Button
-                        type="button"
-                        size="icon"
-                        onClick={handleAddItem}
-                        aria-label="Add item"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <Input placeholder="Enter purpose of request" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <DialogFooter className="flex gap-2 justify-end">
-              <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  Cancel
-                </Button>
-              </DialogClose>
+            <div className="flex justify-between items-center">
               <Button
                 type="button"
-                onClick={handleSave}
-                disabled={items.length === 0}
+                onClick={handleAddItem}
+                aria-label="Add item"
+                variant="secondary"
               >
-                Save {items.length > 0 && `(${items.length})`}
+                <Plus className="h-4 w-4 mr-2" />
+                Add Item
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
       </DialogContent>

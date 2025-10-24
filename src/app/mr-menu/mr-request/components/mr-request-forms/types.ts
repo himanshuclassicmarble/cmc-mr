@@ -8,12 +8,11 @@ export interface MaterialRequestProps {
 export type FormFields = {
   materialCode: string;
   description: string;
-  qtyReq: string;
+  qtyReq: number | undefined;
   uom: string;
   purpose: string;
 };
 
-// edit and mr approval
 export interface MRRequestApprovalProps {
   data: MaterialRateValues;
   onUpdate: (
@@ -32,8 +31,7 @@ export interface EditMaterialRequestProps {
     updates: Partial<MaterialRateValues>,
   ) => void;
 }
-// mr approval form values
 export interface FormValues {
-  qtyReq: string;
-  qtyApproved: string;
+  qtyReq: number | undefined;
+  qtyApproved: number | undefined;
 }
