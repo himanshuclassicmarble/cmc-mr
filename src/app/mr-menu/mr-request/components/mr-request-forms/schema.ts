@@ -40,16 +40,22 @@ export const materialRateSchema = z.object({
   approvalDate: z.string().optional(),
   createdBy: z.string().optional(),
   approvedBy: z.string().optional(),
+
+  rejectedDate: z.string().optional(),
+  rejectReason: z.string().optional(),
+  rejectedBy: z.string().optional(),
 });
 
 export type MaterialRateValues = z.infer<typeof materialRateSchema>;
 
 export const formFieldsSchema = z.object({
-  materialCode: z.string().min(1, "Material code is required"),
-  description: z.string().min(1, "Description is required"),
-  qtyReq: z.number().min(0, "Quantity cannot be negative"),
-  uom: z.string().min(1, "Unit of measurement is required"),
-  purpose: z.string().min(1, "Purpose is required"),
+  materialCode: z.string().min(1, "Required"),
+  description: z.string().min(1, "Required"),
+  qtyReq: z.number().min(1, "Required"),
+  uom: z.string().min(1, "Required"),
+  purpose: z.string().min(1, "Required"),
+  materialGroup: z.string().optional(),
+  materialType: z.string().optional(),
 });
 
 export type FormFieldsType = z.infer<typeof formFieldsSchema>;

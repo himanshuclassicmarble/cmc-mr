@@ -13,7 +13,6 @@ import {
   useReactTable,
   ColumnDef,
 } from "@tanstack/react-table";
-
 import {
   Table,
   TableBody,
@@ -31,14 +30,12 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   ChevronLeft,
   ChevronRight,
   Columns3,
-  ArrowUpDown,
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
@@ -80,9 +77,31 @@ export default function MRRequestTable({
     getPaginationRowModel: getPaginationRowModel(),
   });
 
+  const toggleSort = (colId: string) => {
+    const currentSort = sorting.find((s) => s.id === colId);
+    if (!currentSort) {
+      setSorting([{ id: colId, desc: false }]); // Ascending
+    } else if (!currentSort.desc) {
+      setSorting([{ id: colId, desc: true }]); // Descending
+    } else {
+      setSorting([]); // None
+    }
+  };
+
+  const sortableColumns = table
+    .getAllColumns()
+    .filter((col) => col.getCanSort());
+  const defaultSortColId = sortableColumns[0]?.id || "id";
+  const currentSort = sorting.find((s) => s.id === defaultSortColId);
+  const sortLabel = !currentSort
+    ? "No Sort"
+    : currentSort.desc
+      ? "Descending"
+      : "Ascending";
+
   return (
     <div className="space-y-4">
-      {/* Search + Column Toggle + Sorting + Status Filter */}
+      {/* Search + Column Toggle + Filter + Sort */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full">
         <div className="flex-1 max-w-sm">
           <Input
@@ -93,13 +112,10 @@ export default function MRRequestTable({
         </div>
 
         <div className="flex flex-row gap-2">
-          {/* Status Filter Dropdown */}
+          {/* Status Filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="flex-1 flex items-center gap-2"
-              >
+              <Button variant="outline" className="flex items-center gap-2">
                 Filter Status
               </Button>
             </DropdownMenuTrigger>
@@ -133,10 +149,7 @@ export default function MRRequestTable({
           {/* Column Visibility */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="flex-1 items-center gap-2 sm:ml-auto"
-              >
+              <Button variant="outline" className="flex items-center gap-2">
                 <Columns3 className="h-4 w-4" />
                 Columns
               </Button>
@@ -157,66 +170,23 @@ export default function MRRequestTable({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Sorting */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="flex-1 flex items-center gap-2"
-              >
-                <ArrowUpDown className="h-4 w-4" />
-                Sort
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Sort by Column</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {table.getAllColumns().map((col) => {
-                const currentSort = sorting.find((s) => s.id === col.id);
-                const isAscending = currentSort && !currentSort.desc;
-                const isDescending = currentSort && currentSort.desc;
-
-                return (
-                  <div key={col.id} className="px-2 py-1.5">
-                    <div className="font-medium text-sm mb-1">{col.id}</div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant={isAscending ? "default" : "outline"}
-                        size="sm"
-                        className="flex-1 h-8 text-xs"
-                        onClick={() =>
-                          setSorting([{ id: col.id, desc: false }])
-                        }
-                      >
-                        <ArrowUp className="h-3 w-3 mr-1" />
-                        Asc
-                      </Button>
-                      <Button
-                        variant={isDescending ? "default" : "outline"}
-                        size="sm"
-                        className="flex-1 h-8 text-xs"
-                        onClick={() => setSorting([{ id: col.id, desc: true }])}
-                      >
-                        <ArrowDown className="h-3 w-3 mr-1" />
-                        Desc
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-              {sorting.length > 0 && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setSorting([])}
-                    className="text-xs text-muted-foreground"
-                  >
-                    Clear sorting
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* ✅ Simplified Sort Toggle Button */}
+          <Button
+            variant={currentSort ? "default" : "outline"}
+            className="flex items-center gap-2"
+            onClick={() => toggleSort(defaultSortColId)}
+          >
+            {currentSort ? (
+              currentSort.desc ? (
+                <ArrowDown className="h-4 w-4" />
+              ) : (
+                <ArrowUp className="h-4 w-4" />
+              )
+            ) : (
+              <ArrowUp className="h-4 w-4 opacity-30" />
+            )}
+            {sortLabel}
+          </Button>
         </div>
 
         <CreateMaterialRequest

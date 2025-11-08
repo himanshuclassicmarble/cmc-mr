@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 export default function HomePage() {
   const routes = [
     {
-      title: "Home Screen",
+      title: "MR Request Screen",
       description: "List the Material Request",
       href: "/mr-menu/mr-request",
     },

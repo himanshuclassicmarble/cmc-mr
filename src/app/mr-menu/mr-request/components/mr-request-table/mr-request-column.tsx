@@ -60,25 +60,44 @@ export const getMRRequestColumns = (
   {
     accessorKey: "status",
     header: "Status",
+    accessorFn: (row) => row.status, // this gives filter access to the raw value
+
     cell: ({ row }) => (
       <MRRequestApproval data={row.original} onUpdate={onUpdate} />
     ),
+
+    filterFn: (row, columnId, filterValue) => {
+      const cellValue = String(row.getValue(columnId)).toLowerCase();
+      return cellValue === String(filterValue).toLowerCase();
+    },
   },
   {
     accessorKey: "createdDate",
-    header: "Crdt Date",
+    header: "Crdt. Date",
   },
   {
     accessorKey: "approvalDate",
-    header: "Appr Date",
+    header: "Appr. Date",
   },
   {
     accessorKey: "createdBy",
-    header: "Crtd By",
+    header: "Crtd. By",
   },
   {
     accessorKey: "approvedBy",
     header: "Appr By",
+  },
+  {
+    accessorKey: "rejectedBy",
+    header: "Rej. by",
+  },
+  {
+    accessorKey: "rejectedDate",
+    header: "Rej, Dt",
+  },
+  {
+    accessorKey: "rejectReason",
+    header: "Rej. Rs.",
   },
   {
     id: "actions",

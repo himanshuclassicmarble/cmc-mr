@@ -13,6 +13,6 @@ export const renumberItems = (
 ): MaterialRateValues[] => {
   return itemsList.map((item, index) => ({
     ...item,
-    srNo: String(index + 1),
+    srNo: String((index + 1) * 10), // 10, 20, 30, ...
   }));
 };

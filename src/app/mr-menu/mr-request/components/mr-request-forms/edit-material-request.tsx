@@ -2,15 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Form,
@@ -33,11 +24,21 @@ import { toast } from "sonner";
 import { Pencil } from "lucide-react";
 
 import { formFieldsSchema, MaterialRateValues } from "./schema";
-import { unitOfMeasurement } from "./constants";
+import { unitOfMeasurement, materialGroups, materialTypes } from "./constants";
 import { EditMaterialRequestProps, FormFields } from "./types";
 import { MaterialCodeSearchField } from "./_sub-components/material-code-search";
 import { MaterialMaster } from "@/app/mr-menu/material-master/types";
 import { Combobox } from "./_sub-components/combobox";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function EditMaterialRequest({
   data,
@@ -46,8 +47,6 @@ export function EditMaterialRequest({
 }: EditMaterialRequestProps) {
   const [open, setOpen] = useState(false);
   const [newMaterial, setNewMaterial] = useState(false);
-  const [selectedMaterial, setSelectedMaterial] =
-    useState<MaterialMaster | null>(null);
 
   const form = useForm<FormFields>({
     resolver: zodResolver(formFieldsSchema),
@@ -57,6 +56,8 @@ export function EditMaterialRequest({
       qtyReq: data.qtyReq || 0,
       uom: data.uom || "",
       purpose: data.purpose || "",
+      materialGroup: data.materialGroup || "",
+      materialType: data.materialType || "",
     },
     mode: "onBlur",
   });
@@ -68,14 +69,27 @@ export function EditMaterialRequest({
     );
 
     if (material) {
-      form.setValue("description", description, { shouldValidate: true });
+      form.setValue("description", material.materialDescription || "", {
+        shouldValidate: true,
+      });
       form.setValue("materialCode", material.materialCode || "");
       form.setValue("uom", material.uom || "");
-      setSelectedMaterial(material);
+      form.setValue("materialGroup", material.materialGroup || "");
+      form.setValue("materialType", material.materialType || "");
+      setNewMaterial(false);
     }
   };
 
-  // reset everything whenever dialog opens and auto-detect if new material
+  const handleMaterialFound = (material: MaterialMaster) => {
+    form.setValue("materialCode", material.materialCode || "");
+    form.setValue("description", material.materialDescription || "");
+    form.setValue("uom", material.uom || "");
+    form.setValue("materialGroup", material.materialGroup || "");
+    form.setValue("materialType", material.materialType || "");
+    setNewMaterial(false);
+  };
+
+  // reset everything whenever dialog opens
   useEffect(() => {
     if (open) {
       form.reset({
@@ -84,19 +98,14 @@ export function EditMaterialRequest({
         qtyReq: data.qtyReq || 0,
         uom: data.uom || "",
         purpose: data.purpose || "",
+        materialGroup: data.materialGroup || "",
+        materialType: data.materialType || "",
       });
 
-      // Check if this is a new material by looking for it in materialOption
       const isNewMaterial = !materialOption.some(
         (m) => m.materialCode === data.materialCode,
       );
       setNewMaterial(isNewMaterial);
-
-      // Set selected material if it exists
-      const material = materialOption.find(
-        (m) => m.materialCode === data.materialCode,
-      );
-      setSelectedMaterial(material || null);
     }
   }, [open, data, form, materialOption]);
 
@@ -108,12 +117,15 @@ export function EditMaterialRequest({
     }
 
     const formValues = form.getValues();
+
     const updates: Partial<MaterialRateValues> = {
       materialCode: formValues.materialCode,
       description: formValues.description,
       qtyReq: formValues.qtyReq,
       uom: formValues.uom,
       purpose: formValues.purpose,
+      materialGroup: formValues.materialGroup || "",
+      materialType: formValues.materialType || "",
     };
 
     onUpdate(data.reqId, data.srNo, updates);
@@ -124,20 +136,12 @@ export function EditMaterialRequest({
   const handleDialogClose = () => {
     form.reset();
     setNewMaterial(false);
-    setSelectedMaterial(null);
     setOpen(false);
   };
 
-  const handleMaterialFound = (material: MaterialMaster) => {
-    form.setValue("materialCode", material.materialCode || "");
-    form.setValue("description", material.materialDescription || "");
-    form.setValue("uom", material.uom || "");
-    setSelectedMaterial(material);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
         <Button
           variant="outline"
           size="icon"
@@ -146,164 +150,238 @@ export function EditMaterialRequest({
         >
           <Pencil className="h-4 w-4" />
         </Button>
-      </DialogTrigger>
+      </DrawerTrigger>
 
-      <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Material Request</DialogTitle>
-        </DialogHeader>
-
-        {/* Request Info */}
-        <div className="space-y-2 py-2 text-sm bg-muted/50 rounded-md p-3">
-          <div className="flex gap-4">
-            <div>
-              <span className="font-medium text-muted-foreground">
-                Request ID:
-              </span>{" "}
-              <span className="font-mono">{data.reqId}</span>
-            </div>
-            <div>
-              <span className="font-medium text-muted-foreground">SR No:</span>{" "}
-              <span className="font-mono">{data.srNo}</span>
+      <DrawerContent className="justify-self-center  lg:w-4xl">
+        <DrawerHeader>
+          <DrawerTitle>Edit Material Request</DrawerTitle>
+        </DrawerHeader>
+        <ScrollArea className="h-[60vh]  rounded-md px-4">
+          {/* Request Info */}
+          <div className="space-y-2 py-2 text-sm bg-muted/50 rounded-md mb-6">
+            <div className="flex gap-4">
+              <div>
+                <span className="font-medium text-muted-foreground">
+                  Request ID:
+                </span>{" "}
+                <span className="font-mono">{data.reqId}</span>
+              </div>
+              <div>
+                <span className="font-medium text-muted-foreground">
+                  SR No:
+                </span>{" "}
+                <span className="font-mono">{data.srNo}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Form */}
-        <Form {...form}>
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-            {/* Material Code Search */}
-            <MaterialCodeSearchField
-              name="materialCode"
-              materialOptions={materialOption}
-              setNewMaterial={setNewMaterial}
-              onMaterialFound={handleMaterialFound}
-            />
-
-            {/* Description */}
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    {newMaterial ? (
-                      // new material → editable input
-                      <Input
-                        placeholder="Enter material description"
-                        {...field}
-                      />
-                    ) : (
-                      // existing material → combobox (editable)
-                      <Combobox
-                        options={materialOption.map((m) => ({
-                          value: m.materialDescription,
-                          label: m.materialDescription,
-                        }))}
-                        value={field.value}
-                        onValueChange={(val) => {
-                          field.onChange(val);
-                          handleDescriptionChange(val);
-                        }}
-                        disabled={false}
-                      />
-                    )}
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Quantity & UOM */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="qtyReq"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity Required</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        placeholder="0"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          {/* Form */}
+          <Form {...form}>
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+              {/* Material Code Search */}
+              <MaterialCodeSearchField
+                name="materialCode"
+                materialOptions={materialOption}
+                setNewMaterial={setNewMaterial}
+                onMaterialFound={handleMaterialFound}
               />
 
+              {/* Description */}
               <FormField
                 control={form.control}
-                name="uom"
+                name="description"
                 render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>Unit</FormLabel>
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       {newMaterial ? (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select Unit" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {unitOfMeasurement.map((uom) => (
-                              <SelectItem key={uom} value={uom}>
-                                {uom}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          placeholder="Enter material description"
+                          {...field}
+                        />
                       ) : (
-                        // existing material → editable input
-                        <Input {...field} disabled readOnly />
+                        <Combobox
+                          options={materialOption.map((m) => ({
+                            value: m.materialDescription,
+                            label: m.materialDescription,
+                          }))}
+                          value={field.value}
+                          onValueChange={(val) => {
+                            field.onChange(val);
+                            handleDescriptionChange(val);
+                          }}
+                          disabled={false}
+                        />
                       )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
-            {/* Purpose */}
-            <FormField
-              control={form.control}
-              name="purpose"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Purpose</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter purpose of request" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              {/* Material Group & Type */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Material Group */}
+                <FormField
+                  control={form.control}
+                  name="materialGroup"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Material Group</FormLabel>
+                      <FormControl>
+                        {newMaterial ? (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Material Group" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {materialGroups.map((group) => (
+                                <SelectItem key={group} value={group}>
+                                  {group}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input {...field} disabled readOnly />
+                        )}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            {/* Footer */}
-            <DialogFooter className="flex gap-2 justify-end">
-              <DialogClose asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleDialogClose}
-                >
-                  Cancel
+                {/* Material Type */}
+                <FormField
+                  control={form.control}
+                  name="materialType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Material Type</FormLabel>
+                      <FormControl>
+                        {newMaterial ? (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Material Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {materialTypes.map((type) => (
+                                <SelectItem key={type} value={type}>
+                                  {type}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input {...field} disabled readOnly />
+                        )}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Quantity & UOM */}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="qtyReq"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantity Required</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(e.target.valueAsNumber)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="uom"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Unit</FormLabel>
+                      <FormControl>
+                        {newMaterial ? (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select Unit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {unitOfMeasurement.map((uom) => (
+                                <SelectItem key={uom} value={uom}>
+                                  {uom}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input {...field} disabled readOnly />
+                        )}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Purpose */}
+              <FormField
+                control={form.control}
+                name="purpose"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Purpose</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter purpose of request"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Footer */}
+              <DrawerFooter className="flex gap-2 justify-end">
+                <DrawerClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleDialogClose}
+                  >
+                    Cancel
+                  </Button>
+                </DrawerClose>
+                <Button type="button" onClick={handleSave}>
+                  Save Changes
                 </Button>
-              </DialogClose>
-              <Button type="button" onClick={handleSave}>
-                Save Changes
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+              </DrawerFooter>
+            </form>
+          </Form>
+        </ScrollArea>
+      </DrawerContent>
+    </Drawer>
   );
 }

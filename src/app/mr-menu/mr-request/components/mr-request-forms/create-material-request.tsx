@@ -2,14 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Form,
@@ -39,6 +31,16 @@ import { DEFAULT_FORM_VALUES, unitOfMeasurement } from "./constants";
 import { generateRequestId, renumberItems } from "./utils";
 import { MaterialCodeSearchField } from "./_sub-components/material-code-search";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 interface MaterialOption {
   materialCode: string;
@@ -120,9 +122,9 @@ export function CreateMaterialRequest({
       uom: formValues.uom,
       purpose: formValues.purpose,
       status: "pending",
-      createdDate: new Date().toLocaleDateString(),
+      createdDate: new Date().toLocaleDateString("en-GB"),
       approvalDate: "",
-      createdBy: "",
+      createdBy: "Himanshu Vishwakarma",
       approvedBy: "",
     };
 
@@ -149,7 +151,6 @@ export function CreateMaterialRequest({
       purpose: itemToEdit.purpose,
     });
 
-    // Set material context for editing
     if (itemToEdit.materialCode === "0") {
       setNewMaterial(true);
     } else {
@@ -179,16 +180,26 @@ export function CreateMaterialRequest({
 
   const handleSave = async () => {
     if (items.length === 0) {
-      toast.error("Add at least one item before saving.");
+      toast.error("Add at least one item before saving.", {
+        position: "top-center",
+      });
       return;
     }
 
     items.forEach((item) => onAddData(item));
 
-    toast.success(`${items.length} request(s) added to table!`);
+    toast.success(`${items.length} request(s) added successfully!`, {
+      description: `ReqID: ${currentReqId}`,
+      position: "top-center",
+      duration: 6000,
+      action: {
+        label: "OK",
+        onClick: () => toast.dismiss(),
+      },
+    });
+
     handleDialogClose();
   };
-
   const handleCancel = () => {
     setItems([]);
 
@@ -205,228 +216,45 @@ export function CreateMaterialRequest({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
         <Button>Create Material Request</Button>
-      </DialogTrigger>
+      </DrawerTrigger>
 
-      <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto p-3 gap-2">
-        <DialogHeader>
-          <DialogTitle>Create Material Request</DialogTitle>
-        </DialogHeader>
-
-        <ScrollArea className="h-[200px] bg-card rounded-md ">
-          <div className="p-2 shadow-none border-0">
-            {items.length > 0 ? (
-              <div className="space-y-2">
-                {items.map((item, index) => (
-                  <Card
-                    key={`${item.reqId}-${index}`}
-                    className="p-2 gap-2 shadow-sm border bg-card hover:bg-accent/30 transition-colors"
-                  >
-                    {/* Header */}
-                    <div className="flex items-center justify-between border-b pb-1.5">
-                      <span className="text-xs font-semibold tracking-wide text-muted-foreground">
-                        SR No:{" "}
-                        <span className="font-mono text-sm text-foreground">
-                          {item.srNo}
-                        </span>
-                      </span>
-                      <div className="flex gap-1.5">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => handleEditItem(index)}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-destructive hover:bg-destructive/10"
-                          onClick={() => handleRemoveItem(index)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Details */}
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Material:</span>
-                        <span className="font-medium">{item.materialCode}</span>
-                      </div>
-
-                      {item.materialType && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-muted-foreground">Type:</span>
-                          <span className="font-medium">
-                            {item.materialType}
-                          </span>
-                        </div>
-                      )}
-
-                      {item.materialGroup && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-muted-foreground">Group:</span>
-                          <span className="font-medium">
-                            {item.materialGroup}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Qty:</span>
-                        <span className="font-medium">
-                          {item.qtyReq} {item.uom}
-                        </span>
-                      </div>
-
-                      {item.description && (
-                        <div className="col-span-2 flex gap-1">
-                          <span className="text-muted-foreground">
-                            Description:
-                          </span>
-                          <span className="font-medium break-words">
-                            {item.description}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="col-span-2 flex gap-1">
-                        <span className="text-muted-foreground">Purpose:</span>
-                        <span className="font-medium break-words">
-                          {item.purpose}
-                        </span>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center p-12 text-center">
-                <h3 className="font-semibold text-sm">No Items Added</h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Fill the form below to add items
-                </p>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-
-        <div className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={handleCancel}
-            >
-              Cancel
-            </Button>
-          </DialogClose>
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleSave}
-            disabled={items.length === 0}
-          >
-            Save {items.length > 0 && `(${items.length})`}
-          </Button>
-        </div>
-
-        <Separator orientation="horizontal" />
-
-        <Form {...form}>
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-            <MaterialCodeSearchField
-              name="materialCode"
-              materialOptions={materialOption}
-              setNewMaterial={setNewMaterial}
-              onMaterialFound={handleMaterialFound}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    {newMaterial ? (
-                      <Input
-                        placeholder="Enter material description"
-                        {...field}
-                      />
-                    ) : (
-                      <Combobox
-                        options={materialOption.map((m) => ({
-                          value: m.materialDescription,
-                          label: m.materialDescription,
-                        }))}
-                        value={field.value}
-                        onValueChange={handleDescriptionChange}
-                      />
-                    )}
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="qtyReq"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity Required</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        min="0"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(e.target.valueAsNumber || 0)
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+      <DrawerContent className="justify-self-center lg:w-4xl">
+        <DrawerHeader>
+          <DrawerTitle>Create Material Request</DrawerTitle>
+        </DrawerHeader>
+        <ScrollArea className="h-[60vh] rounded-md px-4 pb-6">
+          <Form {...form}>
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+              <MaterialCodeSearchField
+                name="materialCode"
+                materialOptions={materialOption}
+                setNewMaterial={setNewMaterial}
+                onMaterialFound={handleMaterialFound}
               />
 
               <FormField
                 control={form.control}
-                name="uom"
+                name="description"
                 render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>Unit</FormLabel>
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       {newMaterial ? (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select Unit" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {unitOfMeasurement.map((uom) => (
-                              <SelectItem key={uom} value={uom}>
-                                {uom}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
                         <Input
+                          placeholder="Enter material description"
                           {...field}
-                          disabled
-                          className="bg-muted cursor-not-allowed"
+                        />
+                      ) : (
+                        <Combobox
+                          options={materialOption.map((m) => ({
+                            value: m.materialDescription,
+                            label: m.materialDescription,
+                          }))}
+                          value={field.value}
+                          onValueChange={handleDescriptionChange}
                         />
                       )}
                     </FormControl>
@@ -434,36 +262,225 @@ export function CreateMaterialRequest({
                   </FormItem>
                 )}
               />
-            </div>
 
-            <FormField
-              control={form.control}
-              name="purpose"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Purpose</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter purpose of request" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="qtyReq"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantity Required</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          min="0"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(e.target.valueAsNumber || 0)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="flex justify-between items-center">
+                <FormField
+                  control={form.control}
+                  name="uom"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Unit</FormLabel>
+                      <FormControl>
+                        {newMaterial ? (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select Unit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {unitOfMeasurement.map((uom) => (
+                                <SelectItem key={uom} value={uom}>
+                                  {uom}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input
+                            {...field}
+                            disabled
+                            className="bg-muted cursor-not-allowed"
+                          />
+                        )}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="purpose"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Purpose</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter purpose of request"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <Button
                 type="button"
                 onClick={handleAddItem}
                 aria-label="Add item"
-                variant="secondary"
+                variant="destructive"
+                className="flex justify-self-end"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Item
               </Button>
+            </form>
+          </Form>
+          <Separator orientation="horizontal" className="m-2" />
+          <ScrollArea className="h-[200px] bg-card rounded-md ">
+            <div className="p-2 shadow-none border-0">
+              {items.length > 0 ? (
+                <div className="space-y-2">
+                  {items.map((item, index) => (
+                    <Card
+                      key={`${item.reqId}-${index}`}
+                      className="p-2 gap-2 shadow-sm border bg-card hover:bg-accent/30 transition-colors"
+                    >
+                      {/* Header */}
+                      <div className="flex items-center justify-between border-b pb-1.5">
+                        <span className="text-xs font-semibold tracking-wide text-muted-foreground">
+                          SR No:{" "}
+                          <span className="font-mono text-sm text-foreground">
+                            {item.srNo}
+                          </span>
+                        </span>
+                        <div className="flex gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => handleEditItem(index)}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                            onClick={() => handleRemoveItem(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Details */}
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">
+                            Material:
+                          </span>
+                          <span className="font-medium">
+                            {item.materialCode}
+                          </span>
+                        </div>
+
+                        {item.materialType && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">Type:</span>
+                            <span className="font-medium">
+                              {item.materialType}
+                            </span>
+                          </div>
+                        )}
+
+                        {item.materialGroup && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">
+                              Group:
+                            </span>
+                            <span className="font-medium">
+                              {item.materialGroup}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">Qty:</span>
+                          <span className="font-medium">
+                            {item.qtyReq} {item.uom}
+                          </span>
+                        </div>
+
+                        {item.description && (
+                          <div className="col-span-2 flex gap-1">
+                            <span className="text-muted-foreground">
+                              Description:
+                            </span>
+                            <span className="font-medium break-words">
+                              {item.description}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="col-span-2 flex gap-1">
+                          <span className="text-muted-foreground">
+                            Purpose:
+                          </span>
+                          <span className="font-medium break-words">
+                            {item.purpose}
+                          </span>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-12 text-center">
+                  <h3 className="font-semibold text-sm">No Items Added</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Fill the form below to add items
+                  </p>
+                </div>
+              )}
             </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          </ScrollArea>
+
+          <DrawerFooter className="flex flex-row justify-end gap-2">
+            <DrawerClose asChild>
+              <Button type="button" variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
+            </DrawerClose>
+            <Button
+              type="button"
+              onClick={handleSave}
+              disabled={items.length === 0}
+            >
+              Save
+              <Badge variant="destructive" className="rounded-full size-6 p-1">
+                {items.length > 0 && `(${items.length})`}
+              </Badge>
+            </Button>
+          </DrawerFooter>
+        </ScrollArea>
+      </DrawerContent>
+    </Drawer>
   );
 }

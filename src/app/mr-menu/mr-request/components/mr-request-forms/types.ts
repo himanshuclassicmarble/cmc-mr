@@ -5,13 +5,16 @@ export interface MaterialRequestProps {
   materialOption: MaterialMaster[];
   onAddData: (newData: MaterialRateValues) => void;
 }
-export type FormFields = {
+
+export interface FormFields {
   materialCode: string;
   description: string;
   qtyReq: number;
   uom: string;
   purpose: string;
-};
+  materialGroup?: string;
+  materialType?: string;
+}
 
 export interface MRRequestApprovalProps {
   data: MaterialRateValues;
