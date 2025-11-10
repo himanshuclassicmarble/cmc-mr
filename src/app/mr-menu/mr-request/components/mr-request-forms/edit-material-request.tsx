@@ -21,7 +21,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Pencil } from "lucide-react";
+import { ListRestart, Pencil } from "lucide-react";
 
 import { formFieldsSchema, MaterialRateValues } from "./schema";
 import { unitOfMeasurement, materialGroups, materialTypes } from "./constants";
@@ -29,16 +29,16 @@ import { EditMaterialRequestProps, FormFields } from "./types";
 import { MaterialCodeSearchField } from "./_sub-components/material-code-search";
 import { MaterialMaster } from "@/app/mr-menu/material-master/types";
 import { Combobox } from "./_sub-components/combobox";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { DialogTitle } from "@radix-ui/react-dialog";
 
 export function EditMaterialRequest({
   data,
@@ -109,6 +109,17 @@ export function EditMaterialRequest({
     }
   }, [open, data, form, materialOption]);
 
+  const handleBackToOriginal = () => {
+    form.reset({
+      materialCode: data.materialCode || "",
+      description: data.description || "",
+      qtyReq: data.qtyReq || 0,
+      uom: data.uom || "",
+      purpose: data.purpose || "",
+      materialGroup: data.materialGroup || "",
+      materialType: data.materialType || "",
+    });
+  };
   const handleSave = async () => {
     const isValid = await form.trigger();
     if (!isValid) {
@@ -140,8 +151,8 @@ export function EditMaterialRequest({
   };
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <Button
           variant="outline"
           size="icon"
@@ -150,12 +161,12 @@ export function EditMaterialRequest({
         >
           <Pencil className="h-4 w-4" />
         </Button>
-      </DrawerTrigger>
+      </DialogTrigger>
 
-      <DrawerContent className="justify-self-center  lg:w-4xl">
-        <DrawerHeader>
-          <DrawerTitle>Edit Material Request</DrawerTitle>
-        </DrawerHeader>
+      <DialogContent className="mx-auto lg:w-4xl">
+        <DialogHeader>
+          <DialogTitle>Edit Material Request</DialogTitle>
+        </DialogHeader>
         <ScrollArea className="h-[60vh]  rounded-md px-4">
           {/* Request Info */}
           <div className="space-y-2 py-2 text-sm bg-muted/50 rounded-md mb-6">
@@ -219,14 +230,13 @@ export function EditMaterialRequest({
                 )}
               />
 
-              {/* Material Group & Type */}
               <div className="grid grid-cols-2 gap-4">
                 {/* Material Group */}
                 <FormField
                   control={form.control}
                   name="materialGroup"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="w-full">
                       <FormLabel>Material Group</FormLabel>
                       <FormControl>
                         {newMaterial ? (
@@ -234,7 +244,7 @@ export function EditMaterialRequest({
                             value={field.value}
                             onValueChange={field.onChange}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select Material Group" />
                             </SelectTrigger>
                             <SelectContent>
@@ -259,7 +269,7 @@ export function EditMaterialRequest({
                   control={form.control}
                   name="materialType"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="w-full">
                       <FormLabel>Material Type</FormLabel>
                       <FormControl>
                         {newMaterial ? (
@@ -267,7 +277,7 @@ export function EditMaterialRequest({
                             value={field.value}
                             onValueChange={field.onChange}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select Material Type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -364,8 +374,15 @@ export function EditMaterialRequest({
               />
 
               {/* Footer */}
-              <DrawerFooter className="flex gap-2 justify-end">
-                <DrawerClose asChild>
+              <DialogFooter className="flex flex-row  gap-2 justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleBackToOriginal}
+                >
+                  <ListRestart /> Original
+                </Button>
+                <DialogClose asChild>
                   <Button
                     type="button"
                     variant="outline"
@@ -373,15 +390,15 @@ export function EditMaterialRequest({
                   >
                     Cancel
                   </Button>
-                </DrawerClose>
+                </DialogClose>
                 <Button type="button" onClick={handleSave}>
                   Save Changes
                 </Button>
-              </DrawerFooter>
+              </DialogFooter>
             </form>
           </Form>
         </ScrollArea>
-      </DrawerContent>
-    </Drawer>
+      </DialogContent>
+    </Dialog>
   );
 }

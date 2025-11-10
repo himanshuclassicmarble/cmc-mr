@@ -33,14 +33,14 @@ import { MaterialCodeSearchField } from "./_sub-components/material-code-search"
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface MaterialOption {
   materialCode: string;
@@ -53,11 +53,13 @@ interface MaterialOption {
 interface MaterialRequestProps {
   materialOption: MaterialOption[];
   onAddData: (newData: MaterialRateValues) => void;
+  user: string;
 }
 
 export function CreateMaterialRequest({
   materialOption,
   onAddData,
+  user,
 }: MaterialRequestProps) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<MaterialRateValues[]>([]);
@@ -89,10 +91,23 @@ export function CreateMaterialRequest({
       form.setValue("uom", material.uom || "");
       setSelectedMaterial(material);
     }
+    !selectedMaterial === null;
   };
 
   // ==================== Item Management ====================
 
+  const handleClearForm = async () => {
+    form.reset({
+      materialCode: DEFAULT_FORM_VALUES.materialCode,
+      description: DEFAULT_FORM_VALUES.description,
+      qtyReq: DEFAULT_FORM_VALUES.qtyReq,
+      uom: DEFAULT_FORM_VALUES.uom,
+      purpose: DEFAULT_FORM_VALUES.purpose,
+    });
+
+    setSelectedMaterial(null);
+    setNewMaterial(false);
+  };
   const handleAddItem = async () => {
     const isValid = await form.trigger();
 
@@ -124,7 +139,7 @@ export function CreateMaterialRequest({
       status: "pending",
       createdDate: new Date().toLocaleDateString("en-GB"),
       approvalDate: "",
-      createdBy: "Himanshu Vishwakarma",
+      createdBy: user,
       approvedBy: "",
     };
 
@@ -216,23 +231,24 @@ export function CreateMaterialRequest({
   };
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <Button>Create Material Request</Button>
-      </DrawerTrigger>
+      </DialogTrigger>
 
-      <DrawerContent className="justify-self-center lg:w-4xl">
-        <DrawerHeader>
-          <DrawerTitle>Create Material Request</DrawerTitle>
-        </DrawerHeader>
-        <ScrollArea className="h-[60vh] rounded-md px-4 pb-6">
+      <DialogContent className="mx-auto lg:w-6xl p-2">
+        <DialogHeader>
+          <DialogTitle>Create Material Request</DialogTitle>
+        </DialogHeader>
+        <ScrollArea className="h-[80vh] rounded-none px-4">
           <Form {...form}>
-            <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
               <MaterialCodeSearchField
                 name="materialCode"
                 materialOptions={materialOption}
                 setNewMaterial={setNewMaterial}
                 onMaterialFound={handleMaterialFound}
+                disabled={selectedMaterial !== null && !newMaterial}
               />
 
               <FormField
@@ -339,21 +355,32 @@ export function CreateMaterialRequest({
                   </FormItem>
                 )}
               />
-
-              <Button
-                type="button"
-                onClick={handleAddItem}
-                aria-label="Add item"
-                variant="destructive"
-                className="flex justify-self-end"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item
-              </Button>
+              <div className="flex flex-row justify-end items-center gap-2">
+                <Button
+                  type="button"
+                  onClick={handleClearForm}
+                  aria-label="Clear form"
+                  variant="outline"
+                  className="flex justify-self-end"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Clear
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleAddItem}
+                  aria-label="Add item"
+                  variant="destructive"
+                  className="flex justify-self-end"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Item
+                </Button>
+              </div>
             </form>
           </Form>
-          <Separator orientation="horizontal" className="m-2" />
-          <ScrollArea className="h-[200px] bg-card rounded-md ">
+          <Separator orientation="horizontal" className="my-2" />
+          <ScrollArea className="h-[200px] bg-card rounded-md my-2">
             <div className="p-2 shadow-none border-0">
               {items.length > 0 ? (
                 <div className="space-y-2">
@@ -462,12 +489,12 @@ export function CreateMaterialRequest({
             </div>
           </ScrollArea>
 
-          <DrawerFooter className="flex flex-row justify-end gap-2">
-            <DrawerClose asChild>
+          <DialogFooter className="flex flex-row justify-end gap-2">
+            <DialogClose asChild>
               <Button type="button" variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
-            </DrawerClose>
+            </DialogClose>
             <Button
               type="button"
               onClick={handleSave}
@@ -478,9 +505,9 @@ export function CreateMaterialRequest({
                 {items.length > 0 && `(${items.length})`}
               </Badge>
             </Button>
-          </DrawerFooter>
+          </DialogFooter>
         </ScrollArea>
-      </DrawerContent>
-    </Drawer>
+      </DialogContent>
+    </Dialog>
   );
 }

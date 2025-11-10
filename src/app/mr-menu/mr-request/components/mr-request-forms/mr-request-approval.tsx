@@ -38,13 +38,14 @@ import { Separator } from "@/components/ui/separator";
 export const MRRequestApproval = ({
   data,
   onUpdate,
+  user,
 }: MRRequestApprovalProps) => {
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [isMainDialogOpen, setIsMainDialogOpen] = useState(false);
 
-  const APPROVED_BY = "Himanshu";
-
+  const APPROVED_BY = user;
+  const REJECTED_BY = user;
   const form = useForm<FormValues>({
     defaultValues: {
       qtyReq: data.qtyReq ?? 0,
@@ -68,7 +69,6 @@ export const MRRequestApproval = ({
               ? "bg-green-800 text-green-50 hover:bg-green-900"
               : "bg-gray-500 text-gray-50 hover:bg-gray-600";
 
-  // ========================= APPROVE HANDLER =========================
   const handleApprove = (values: FormValues) => {
     const approvalDate = new Date().toLocaleDateString("en-GB");
 
@@ -83,6 +83,9 @@ export const MRRequestApproval = ({
       materialCode: data.materialCode,
       description: data.description,
       purpose: data.purpose,
+      rejectedDate: "",
+      rejectReason: "",
+      rejectedBy: "",
     };
 
     console.log("Approval Data:", approvalData);
@@ -93,14 +96,16 @@ export const MRRequestApproval = ({
       status: "approved",
       approvalDate,
       approvedBy: APPROVED_BY,
+      rejectedDate: "",
+      rejectReason: "",
+      rejectedBy: "",
     });
 
     setIsMainDialogOpen(false);
   };
 
   const handleRejectConfirm = () => {
-    const rejectedDate = new Date().toISOString();
-    const REJECTED_BY = "Himanshu";
+    const rejectedDate = new Date().toLocaleDateString("en-GB");
 
     const rejectionData = {
       reqId: data.reqId,
@@ -113,6 +118,9 @@ export const MRRequestApproval = ({
       rejectedDate,
       rejectReason,
       rejectedBy: REJECTED_BY,
+      qtyApproved: "",
+      approvalDate: "",
+      approvedBy: "",
     };
 
     console.log("Rejection Data:", rejectionData);
@@ -122,6 +130,9 @@ export const MRRequestApproval = ({
       rejectedDate,
       rejectReason,
       rejectedBy: REJECTED_BY,
+      qtyApproved: undefined,
+      approvalDate: "",
+      approvedBy: "",
     });
 
     setIsRejectDialogOpen(false);
@@ -140,7 +151,7 @@ export const MRRequestApproval = ({
           </Badge>
         </DrawerTrigger>
 
-        <DrawerContent className="lg:w-4xl justify-self-center">
+        <DrawerContent className="lg:w-4xl mx-auto">
           <DrawerHeader>
             <DrawerTitle>Material Request Details</DrawerTitle>
           </DrawerHeader>

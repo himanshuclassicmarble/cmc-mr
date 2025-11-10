@@ -24,6 +24,7 @@ interface MaterialCodeSearchFieldProps {
   materialOptions: MaterialOption[];
   setNewMaterial: (value: boolean) => void;
   onMaterialFound?: (material: MaterialOption) => void;
+  disabled?: boolean; // New prop
 }
 
 export const MaterialCodeSearchField = ({
@@ -31,6 +32,7 @@ export const MaterialCodeSearchField = ({
   materialOptions,
   setNewMaterial,
   onMaterialFound,
+  disabled = false, // Default to false
 }: MaterialCodeSearchFieldProps) => {
   const [errorMessage, setErrorMessage] = useState("");
   const form = useFormContext();
@@ -56,7 +58,6 @@ export const MaterialCodeSearchField = ({
     } else {
       setErrorMessage("");
       setNewMaterial(false);
-
       form.setValue("description", foundMaterial.materialDescription || "");
       form.setValue("uom", foundMaterial.uom || "");
 
@@ -75,9 +76,14 @@ export const MaterialCodeSearchField = ({
           <FormLabel>Material Code</FormLabel>
           <div className="flex gap-2">
             <FormControl>
-              <Input placeholder="Enter Material Code (0 for new)" {...field} />
+              <Input
+                placeholder="Enter Material Code (0 for new)"
+                {...field}
+                disabled={disabled}
+                className={disabled ? "bg-muted cursor-not-allowed" : ""}
+              />
             </FormControl>
-            <Button type="button" onClick={handleSearch}>
+            <Button type="button" onClick={handleSearch} disabled={disabled}>
               Search
             </Button>
           </div>

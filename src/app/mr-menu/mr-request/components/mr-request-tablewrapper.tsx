@@ -5,6 +5,7 @@ import MRRequestTable from "./mr-request-table/mr-request-table";
 import { getMRRequestColumns } from "./mr-request-table/mr-request-column";
 import { materialMaster } from "../../material-master/data";
 
+const user = "Himanshu Vishwakarma";
 interface MRRequestTableWrapperProps {
   data: MaterialRateValues[];
 }
@@ -34,10 +35,12 @@ export const MRRequestTableWrapper = ({ data }: MRRequestTableWrapperProps) => {
     <MRRequestTable
       data={tableData}
       columns={getMRRequestColumns(
+        user,
         handleUpdateData,
         Array.isArray(materialMaster) ? materialMaster : [],
       )}
       onAddData={handleAddData}
+      user={user}
     />
   );
 };

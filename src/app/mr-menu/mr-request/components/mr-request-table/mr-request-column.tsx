@@ -6,6 +6,7 @@ import { EditMaterialRequest } from "../mr-request-forms/edit-material-request";
 import { MaterialMaster } from "@/app/mr-menu/material-master/types";
 
 export const getMRRequestColumns = (
+  user: string,
   onUpdate: (
     reqId: string,
     srNo: string,
@@ -13,6 +14,18 @@ export const getMRRequestColumns = (
   ) => void,
   materialOption: MaterialMaster[],
 ): ColumnDef<MaterialRateValues>[] => [
+  {
+    id: "actions",
+    header: "Act.",
+    cell: ({ row }) => (
+      <EditMaterialRequest
+        key={`${row.original.reqId}-${row.original.srNo}`}
+        data={row.original}
+        materialOption={materialOption}
+        onUpdate={onUpdate}
+      />
+    ),
+  },
   {
     accessorKey: "reqId",
     header: "Req ID",
@@ -28,6 +41,20 @@ export const getMRRequestColumns = (
   {
     accessorKey: "description",
     header: "Description",
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    accessorFn: (row) => row.status, // this gives filter access to the raw value
+
+    cell: ({ row }) => (
+      <MRRequestApproval data={row.original} onUpdate={onUpdate} user={user} />
+    ),
+
+    filterFn: (row, columnId, filterValue) => {
+      const cellValue = String(row.getValue(columnId)).toLowerCase();
+      return cellValue === String(filterValue).toLowerCase();
+    },
   },
   {
     accessorKey: "materialGroup",
@@ -58,57 +85,31 @@ export const getMRRequestColumns = (
     header: "Purpose",
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    accessorFn: (row) => row.status, // this gives filter access to the raw value
-
-    cell: ({ row }) => (
-      <MRRequestApproval data={row.original} onUpdate={onUpdate} />
-    ),
-
-    filterFn: (row, columnId, filterValue) => {
-      const cellValue = String(row.getValue(columnId)).toLowerCase();
-      return cellValue === String(filterValue).toLowerCase();
-    },
-  },
-  {
     accessorKey: "createdDate",
     header: "Crdt. Date",
-  },
-  {
-    accessorKey: "approvalDate",
-    header: "Appr. Date",
   },
   {
     accessorKey: "createdBy",
     header: "Crtd. By",
   },
   {
-    accessorKey: "approvedBy",
-    header: "Appr By",
+    accessorKey: "approvalDate",
+    header: "Appr. Date",
   },
   {
-    accessorKey: "rejectedBy",
-    header: "Rej. by",
+    accessorKey: "approvedBy",
+    header: "Appr By",
   },
   {
     accessorKey: "rejectedDate",
     header: "Rej, Dt",
   },
   {
-    accessorKey: "rejectReason",
-    header: "Rej. Rs.",
+    accessorKey: "rejectedBy",
+    header: "Rej. by",
   },
   {
-    id: "actions",
-    header: "Actions",
-    cell: ({ row }) => (
-      <EditMaterialRequest
-        key={`${row.original.reqId}-${row.original.srNo}`}
-        data={row.original}
-        materialOption={materialOption}
-        onUpdate={onUpdate}
-      />
-    ),
+    accessorKey: "rejectReason",
+    header: "Rej. Rs.",
   },
 ];

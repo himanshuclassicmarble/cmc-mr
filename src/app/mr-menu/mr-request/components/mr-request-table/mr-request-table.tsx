@@ -38,6 +38,7 @@ import {
   Columns3,
   ArrowUp,
   ArrowDown,
+  Check,
 } from "lucide-react";
 import { CreateMaterialRequest } from "../mr-request-forms/create-material-request";
 import { MaterialRateValues } from "../mr-request-forms/schema";
@@ -48,12 +49,14 @@ interface MRRequestProps {
   data: MaterialRateValues[];
   columns: ColumnDef<MaterialRateValues>[];
   onAddData: (newData: MaterialRateValues) => void;
+  user: string;
 }
 
 export default function MRRequestTable({
   data,
   columns,
   onAddData,
+  user,
 }: MRRequestProps) {
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -76,6 +79,8 @@ export default function MRRequestTable({
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+  const activeStatus: string =
+    (columnFilters.find((f) => f.id === "status")?.value as string) || "All";
 
   const toggleSort = (colId: string) => {
     const currentSort = sorting.find((s) => s.id === colId);
@@ -112,24 +117,28 @@ export default function MRRequestTable({
         </div>
 
         <div className="flex flex-row gap-2">
-          {/* Status Filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
-                Filter Status
+                Status: {activeStatus}
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel>Status</DropdownMenuLabel>
+
               <DropdownMenuItem
                 onClick={() =>
                   setColumnFilters((prev) =>
                     prev.filter((f) => f.id !== "status"),
                   )
                 }
+                className={`${activeStatus === "All" ? "bg-accent text-accent-foreground" : ""}`}
               >
+                {activeStatus === "All" && <Check className="mr-2 h-4 w-4" />}
                 All
               </DropdownMenuItem>
+
               {statusConst.map((status) => (
                 <DropdownMenuItem
                   key={status}
@@ -139,14 +148,17 @@ export default function MRRequestTable({
                       { id: "status", value: status },
                     ])
                   }
+                  className={`${activeStatus === status ? "bg-accent text-accent-foreground" : ""}`}
                 >
+                  {activeStatus === status && (
+                    <Check className="mr-2 h-4 w-4" />
+                  )}
                   {status}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Column Visibility */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
@@ -192,6 +204,7 @@ export default function MRRequestTable({
         <CreateMaterialRequest
           materialOption={materialMaster}
           onAddData={onAddData}
+          user={user}
         />
       </div>
 

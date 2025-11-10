@@ -23,6 +23,7 @@ export interface MRRequestApprovalProps {
     srNo: string,
     updatedData: Partial<MaterialRateValues>,
   ) => void;
+  user: string;
 }
 
 export interface EditMaterialRequestProps {
