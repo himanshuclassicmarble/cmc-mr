@@ -6,7 +6,7 @@ const ChangePassword = async () => {
 
   return (
     <main className="min-h-[calc(100vh-5rem)] flex items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-8">
+      <div className="mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-4">
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold tracking-tight">
             Change your password

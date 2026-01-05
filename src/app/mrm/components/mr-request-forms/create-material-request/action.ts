@@ -26,6 +26,7 @@ export async function saveMaterialRequestAction(
   _: unknown,
   formData: FormData,
 ) {
+  const supabase = await createSupabaseServerClient();
   const user = await getCurrentProfile();
 
   const raw = Object.fromEntries(formData.entries());
@@ -49,8 +50,6 @@ export async function saveMaterialRequestAction(
   if (!parsed.success) {
     return { error: parsed.error.issues.map((i) => i.message).join(", ") };
   }
-
-  const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase.from("material_requests").insert({
     req_id: parsed.data.reqId,

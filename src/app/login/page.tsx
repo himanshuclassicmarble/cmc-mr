@@ -16,7 +16,6 @@ export default async function LoginPage() {
   return (
     <main className="min-h-[calc(100vh-5rem)] flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8">
-        {/* Welcome Stage */}
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold tracking-tight">Welcome back!</h1>
           <p className="text-sm text-muted-foreground">

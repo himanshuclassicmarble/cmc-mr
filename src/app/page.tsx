@@ -43,7 +43,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="container py-8 px-4">
+      <div className="mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-4">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {routes.map((route) => {
             const Icon = route.icon;
@@ -75,7 +75,7 @@ export default function HomePage() {
             );
           })}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

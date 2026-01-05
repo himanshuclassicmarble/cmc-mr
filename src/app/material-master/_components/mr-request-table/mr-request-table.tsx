@@ -34,6 +34,8 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight, Columns3 } from "lucide-react";
 import { MRMasterSchema } from "../mr-master-form/schema";
 import MRCreateForm from "../mr-master-form/mr-create/mr-create-form";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 interface MRMasterProps {
   data: MRMasterSchema[];

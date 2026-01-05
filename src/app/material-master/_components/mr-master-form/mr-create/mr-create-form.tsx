@@ -65,7 +65,20 @@ export default function MRCreateForm() {
       <DialogTrigger asChild>
         <Button>Create New Material</Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent
+        className="
+          w-full max-w-md
+          mx-auto
+
+          bottom-0 sm:top-1/2
+          sm:-translate-y-1/2
+
+          max-h-[90dvh]
+          overflow-y-auto
+
+          px-3 py-4
+        "
+      >
         <DialogHeader>
           <DialogTitle>Create New Material</DialogTitle>
         </DialogHeader>

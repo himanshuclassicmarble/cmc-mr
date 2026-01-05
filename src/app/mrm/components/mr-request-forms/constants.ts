@@ -11,9 +11,9 @@ export const materialTypes = ["ERSA", "UNBW"];
 
 // Status options
 export const statusConst = [
-  "Open",
-  "Partially Open",
-  "Closed",
+  "open",
+  "partially open",
+  "closed",
   "pending",
   "rejected",
   "approved",

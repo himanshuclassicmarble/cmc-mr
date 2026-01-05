@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,7 @@ interface MaterialCodeSearchFieldProps {
   name: string;
   materialOptions: MaterialOption[];
   setNewMaterial: (value: boolean) => void;
-  onMaterialFound?: (material: MaterialOption) => void;
+  onMaterialFound?: (material: MaterialOption | null) => void;
   disabled?: boolean;
 }
 
@@ -32,38 +33,58 @@ export const MaterialCodeSearchField = ({
   materialOptions,
   setNewMaterial,
   onMaterialFound,
-  disabled = false, // Default to false
+  disabled = false,
 }: MaterialCodeSearchFieldProps) => {
-  const [errorMessage, setErrorMessage] = useState("");
   const form = useFormContext();
 
   const handleSearch = () => {
     const code = form.getValues(name);
 
+    // Clear previous errors
+    form.clearErrors(name);
+
+    if (!code || code.trim() === "") {
+      form.setError(name, {
+        type: "manual",
+        message: "Material code is required",
+      });
+      return;
+    }
+
     if (code === "0") {
       setNewMaterial(true);
-      setErrorMessage("");
       form.setValue("description", "");
       form.setValue("uom", "");
+      onMaterialFound?.(null);
       return;
     }
 
     const foundMaterial = materialOptions.find((m) => m.materialCode === code);
 
     if (!foundMaterial) {
-      setErrorMessage("Material Code does not exist");
+      form.setError(name, {
+        type: "manual",
+        message: "Material code does not exist",
+      });
       setNewMaterial(false);
       form.setValue("description", "");
       form.setValue("uom", "");
+      onMaterialFound?.(null);
     } else {
-      setErrorMessage("");
       setNewMaterial(false);
-      form.setValue("description", foundMaterial.materialDescription || "");
+      form.setValue("description", foundMaterial.materialDescription || "", {
+        shouldValidate: true,
+      });
       form.setValue("uom", foundMaterial.uom || "");
+      onMaterialFound?.(foundMaterial);
+    }
+  };
 
-      if (onMaterialFound) {
-        onMaterialFound(foundMaterial);
-      }
+  const handleInputChange = (value: string) => {
+    form.setValue(name, value);
+    // Clear any existing material selection when code is manually edited
+    if (onMaterialFound) {
+      onMaterialFound(null);
     }
   };
 
@@ -79,6 +100,7 @@ export const MaterialCodeSearchField = ({
               <Input
                 placeholder="Enter Material Code (0 for new)"
                 {...field}
+                onChange={(e) => handleInputChange(e.target.value)}
                 disabled={disabled}
                 className={disabled ? "bg-muted cursor-not-allowed" : ""}
               />
@@ -88,9 +110,6 @@ export const MaterialCodeSearchField = ({
             </Button>
           </div>
           <FormMessage />
-          {errorMessage && (
-            <p className="text-red-500 text-sm mt-1">{errorMessage}</p>
-          )}
         </FormItem>
       )}
     />

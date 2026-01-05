@@ -9,13 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { LogOut, User, Building2, ShieldCheck, Mail } from "lucide-react";
 import { getCurrentProfile } from "@/lib/data/current-profile";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { UserFormSchema } from "@/app/user-screen/components/schema";
 
-export async function ProfilePopover() {
-  const profile = await getCurrentProfile();
-
+export function ProfilePopover({ profile }: { profile: UserFormSchema }) {
   if (!profile) return null;
 
   const initials = profile.userName

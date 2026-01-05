@@ -19,6 +19,7 @@ export interface FormFields {
 export interface MRRequestApprovalProps {
   isAuthorised: boolean;
   data: MaterialRateValues;
+  isDisabled: boolean;
 }
 
 export interface EditMaterialRequestProps {

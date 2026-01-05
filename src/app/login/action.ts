@@ -4,7 +4,14 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loginSchema } from "./schema";
 
-export async function loginAction(_: unknown, formData: FormData) {
+export type LoginState = {
+  error: string | null;
+};
+
+export async function loginAction(
+  _: LoginState,
+  formData: FormData,
+): Promise<LoginState> {
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -12,7 +19,7 @@ export async function loginAction(_: unknown, formData: FormData) {
 
   if (!parsed.success) {
     return {
-      error: parsed.error.issues,
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
     };
   }
 

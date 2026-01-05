@@ -34,9 +34,9 @@ export const getMRRequestColumns = (
     header: "Act.",
     cell: ({ row }) => {
       const isRowOwner = row.original.createdBy === currentUserEmail;
-      const isApproved = row.original.status === "approved";
+      const isAccessible = row.original.status === "pending";
 
-      if (isRowOwner && !isApproved) {
+      if (isRowOwner && isAccessible) {
         return (
           <EditMaterialRequest
             key={`${row.original.reqId}-${row.original.srNo}`}
@@ -79,18 +79,31 @@ export const getMRRequestColumns = (
     header: "Description",
     filterFn: "includesString",
   },
-
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => (
-      <MRRequestApproval isAuthorised={isAuthorised} data={row.original} />
-    ),
+    cell: ({ row }) => {
+      const restrictedStatuses = [
+        "approved",
+        "open",
+        "closed",
+        "partially open",
+      ];
+
+      const isRestricted = restrictedStatuses.includes(row.original.status);
+
+      return (
+        <MRRequestApproval
+          isAuthorised={isAuthorised}
+          data={row.original}
+          isDisabled={isRestricted}
+        />
+      );
+    },
     filterFn: (row, columnId, filterValue) =>
       String(row.getValue(columnId)).toLowerCase() ===
       String(filterValue).toLowerCase(),
   },
-
   {
     accessorKey: "materialGroup",
     header: "MR Group",

@@ -23,7 +23,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Pencil } from "lucide-react";
 
-import { MaterialMaster } from "@/app/material-master/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
@@ -49,6 +48,8 @@ export function EditMaterialRequest({
   const [open, setOpen] = useState(false);
   const [newMaterial, setNewMaterial] = useState(false);
   const [query, setQuery] = useState<string>("");
+  const [selectedMaterial, setSelectedMaterial] =
+    useState<MaterialOption | null>(null);
 
   const form = useForm<FormFields>({
     resolver: zodResolver(formFieldsSchema),
@@ -94,18 +95,28 @@ export function EditMaterialRequest({
         materialType: data.materialType ?? "",
       });
 
-      setNewMaterial(
-        !materialOption.some((m) => m.materialCode === data.materialCode),
+      const existingMaterial = materialOption.find(
+        (m) => m.materialCode === data.materialCode,
       );
+
+      if (existingMaterial) {
+        setSelectedMaterial(existingMaterial);
+        setQuery(existingMaterial.materialDescription);
+        setNewMaterial(false);
+      } else {
+        setSelectedMaterial(null);
+        setNewMaterial(true);
+      }
     }
   }, [open, data, form, materialOption]);
 
-  const handleDescriptionChange = (desc: string) => {
-    const material = materialOption.find((m) => m.materialDescription === desc);
+  const handleMaterialFound = (material: MaterialOption | null) => {
+    setSelectedMaterial(material);
 
     if (material) {
-      form.setValue("description", material.materialDescription);
-      form.setValue("materialCode", material.materialCode);
+      form.setValue("description", material.materialDescription, {
+        shouldValidate: true,
+      });
       form.setValue("uom", material.uom);
       form.setValue("materialGroup", material.materialGroup);
       form.setValue("materialType", material.materialType);
@@ -113,22 +124,45 @@ export function EditMaterialRequest({
     }
   };
 
-  const handleMaterialFound = (material: MaterialMaster) => {
-    form.reset({
-      materialCode: material.materialCode,
-      description: material.materialDescription,
-      qtyReq: form.getValues("qtyReq") ?? 0,
-      uom: material.uom,
-      materialGroup: material.materialGroup,
-      materialType: material.materialType,
-      purpose: form.getValues("purpose") ?? "",
-    });
-    setNewMaterial(false);
+  const validateMaterialMatch = (): boolean => {
+    const values = form.getValues();
+
+    if (newMaterial && values.materialCode === "0") {
+      if (!values.materialGroup || !values.materialType) {
+        toast.error("Please select material group and type for new materials");
+        return false;
+      }
+      return true;
+    }
+
+    if (!selectedMaterial) {
+      toast.error("Please select a valid material from the list");
+      return false;
+    }
+
+    if (
+      values.materialCode !== selectedMaterial.materialCode ||
+      values.description !== selectedMaterial.materialDescription
+    ) {
+      toast.error(
+        "Material code and description do not match. Please search again.",
+      );
+      return false;
+    }
+
+    return true;
   };
 
   const handleSave = async () => {
     const valid = await form.trigger();
-    if (!valid) return toast.error("Please fix validation errors.");
+    if (!valid) {
+      toast.error("Please fix validation errors");
+      return;
+    }
+
+    if (!validateMaterialMatch()) {
+      return;
+    }
 
     const values = form.getValues();
 
@@ -146,10 +180,19 @@ export function EditMaterialRequest({
     const res = await updateMaterialRequestAction(null, formData);
 
     if (res?.error) {
-      return toast.error(res.error);
+      toast.error(res.error);
+      return;
     }
 
     toast.success("Material request updated successfully");
+    handleDialogClose();
+  };
+
+  const handleDialogClose = () => {
+    setNewMaterial(false);
+    setSelectedMaterial(null);
+    setQuery("");
+    form.reset();
     setOpen(false);
   };
 
@@ -161,14 +204,28 @@ export function EditMaterialRequest({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-lg">
+      <DialogContent
+        className="
+          w-full max-w-md
+          mx-auto
+
+          bottom-0 sm:top-1/2
+          sm:-translate-y-1/2
+
+          max-h-[90dvh]
+          overflow-y-auto
+
+          px-3 py-4
+        "
+      >
         <DialogHeader>
           <DialogTitle>Edit Material Request</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="h-[60vh] px-2">
-          <Form key={open ? "form-open" : "form-closed"} {...form}>
+        <ScrollArea className="px-2">
+          <Form {...form}>
             <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+              {/* Material Code Search */}
               <MaterialCodeSearchField
                 name="materialCode"
                 materialOptions={materialOption}
@@ -176,6 +233,7 @@ export function EditMaterialRequest({
                 onMaterialFound={handleMaterialFound}
               />
 
+              {/* Description */}
               <FormField
                 control={form.control}
                 name="description"
@@ -188,12 +246,44 @@ export function EditMaterialRequest({
                       ) : (
                         <SearchDescription
                           filteredOptions={filteredOptions}
-                          query={query}
-                          setQuery={setQuery}
-                          value={field.value}
-                          onValueChange={(val) => {
-                            field.onChange(val);
-                            handleDescriptionChange(val);
+                          query={field.value || query}
+                          setQuery={(val) => {
+                            setQuery(val);
+                            form.setValue("description", val, {
+                              shouldValidate: true,
+                            });
+                          }}
+                          selectedOption={selectedMaterial}
+                          setSelectedOption={(material) => {
+                            setSelectedMaterial(material);
+
+                            if (material) {
+                              // Autofill all fields
+                              form.setValue(
+                                "description",
+                                material.materialDescription,
+                                { shouldValidate: true },
+                              );
+                              form.setValue(
+                                "materialCode",
+                                material.materialCode || "",
+                              );
+                              form.setValue("uom", material.uom || "");
+                              form.setValue(
+                                "materialGroup",
+                                material.materialGroup || "",
+                              );
+                              form.setValue(
+                                "materialType",
+                                material.materialType || "",
+                              );
+                            } else {
+                              // Manual edit → invalidate all dependent fields
+                              form.setValue("materialCode", "");
+                              form.setValue("uom", "");
+                              form.setValue("materialGroup", "");
+                              form.setValue("materialType", "");
+                            }
                           }}
                         />
                       )}
@@ -203,8 +293,8 @@ export function EditMaterialRequest({
                 )}
               />
 
+              {/* Material Group & Type */}
               <div className="grid grid-cols-2 gap-4">
-                {/* Material Group */}
                 <FormField
                   control={form.control}
                   name="materialGroup"
@@ -229,7 +319,11 @@ export function EditMaterialRequest({
                             </SelectContent>
                           </Select>
                         ) : (
-                          <Input {...field} readOnly disabled />
+                          <Input
+                            {...field}
+                            disabled
+                            className="bg-muted cursor-not-allowed"
+                          />
                         )}
                       </FormControl>
                       <FormMessage />
@@ -237,7 +331,6 @@ export function EditMaterialRequest({
                   )}
                 />
 
-                {/* Material Type */}
                 <FormField
                   control={form.control}
                   name="materialType"
@@ -246,30 +339,27 @@ export function EditMaterialRequest({
                       <FormLabel>Material Type</FormLabel>
                       <FormControl>
                         {newMaterial ? (
-                          <div>
-                            <Select
-                              value={field.value}
-                              onValueChange={field.onChange}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {materialTypes.map((t) => (
-                                  <SelectItem key={t} value={t}>
-                                    {t}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <input
-                              type="hidden"
-                              name="materialType"
-                              value={field.value ?? ""}
-                            />
-                          </div>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {materialTypes.map((t) => (
+                                <SelectItem key={t} value={t}>
+                                  {t}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         ) : (
-                          <Input {...field} readOnly disabled />
+                          <Input
+                            {...field}
+                            disabled
+                            className="bg-muted cursor-not-allowed"
+                          />
                         )}
                       </FormControl>
                       <FormMessage />
@@ -278,7 +368,7 @@ export function EditMaterialRequest({
                 />
               </div>
 
-              {/* Qty + UOM */}
+              {/* Quantity & UOM */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -286,12 +376,17 @@ export function EditMaterialRequest({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Quantity Required</FormLabel>
-                      <Input
-                        type="number"
-                        min={0}
-                        value={field.value}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="0"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(e.target.valueAsNumber || 0)
+                          }
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -321,7 +416,11 @@ export function EditMaterialRequest({
                             </SelectContent>
                           </Select>
                         ) : (
-                          <Input {...field} readOnly disabled />
+                          <Input
+                            {...field}
+                            disabled
+                            className="bg-muted cursor-not-allowed"
+                          />
                         )}
                       </FormControl>
                       <FormMessage />
@@ -337,24 +436,28 @@ export function EditMaterialRequest({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Purpose</FormLabel>
-                    <Input placeholder="Enter purpose" {...field} />
+                    <FormControl>
+                      <Input placeholder="Enter purpose" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <DialogFooter className="pt-4 flex gap-2 justify-end">
-                <DialogClose asChild>
-                  <Button variant="outline">Cancel</Button>
-                </DialogClose>
-
-                <Button type="button" onClick={handleSave}>
-                  Save Changes
-                </Button>
-              </DialogFooter>
             </form>
           </Form>
         </ScrollArea>
+
+        <DialogFooter className="pt-4 flex gap-2 justify-end">
+          <DialogClose asChild>
+            <Button variant="outline" onClick={handleDialogClose}>
+              Cancel
+            </Button>
+          </DialogClose>
+
+          <Button type="button" onClick={handleSave}>
+            Save Changes
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

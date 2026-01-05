@@ -54,6 +54,7 @@ export function CreateMaterialRequest({
     useState<MaterialOption | null>(null);
   const [reqId, setReqId] = useState<string | null>(null);
   const [srCounter, setSrCounter] = useState<number>(10);
+
   const form = useForm<FormFieldsType>({
     resolver: zodResolver(formFieldsSchema),
     defaultValues: DEFAULT_FORM_VALUES,
@@ -79,33 +80,56 @@ export function CreateMaterialRequest({
     setFilteredOptions(result);
   }, [debounced, materialOption]);
 
-  const handleMaterialFound = (material: MaterialOption) => {
+  const handleMaterialFound = (material: MaterialOption | null) => {
     setSelectedMaterial(material);
-  };
-
-  const handleDescriptionChange = (description: string) => {
-    const material = materialOption.find(
-      (m) => m.materialDescription === description,
-    );
-
-    if (material) {
-      form.setValue("description", description, { shouldValidate: true });
-      form.setValue("materialCode", material.materialCode || "");
-      form.setValue("uom", material.uom || "");
-      setSelectedMaterial(material);
-    }
   };
 
   const handleDialogClose = () => {
     setNewMaterial(false);
     setSelectedMaterial(null);
+    setQuery("");
     form.reset(DEFAULT_FORM_VALUES);
     setOpen(false);
   };
 
+  const validateMaterialMatch = (): boolean => {
+    const values = form.getValues();
+
+    // For new materials (materialCode = "0"), allow save
+    if (newMaterial && values.materialCode === "0") {
+      return true;
+    }
+
+    // For existing materials, ensure they match
+    if (!selectedMaterial) {
+      toast.error("Please select a valid material from the list");
+      return false;
+    }
+
+    // Verify material code and description match the selected material
+    if (
+      values.materialCode !== selectedMaterial.materialCode ||
+      values.description !== selectedMaterial.materialDescription
+    ) {
+      toast.error(
+        "Material code and description do not match. Please search again.",
+      );
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSaveAndContinue = async () => {
     const valid = await form.trigger();
-    if (!valid) return toast.error("Fix validation errors");
+    if (!valid) {
+      toast.error("Please fix validation errors");
+      return;
+    }
+
+    if (!validateMaterialMatch()) {
+      return;
+    }
 
     const values = form.getValues();
 
@@ -121,6 +145,7 @@ export function CreateMaterialRequest({
     formData.append("srNo", srCounter.toString());
     formData.append("materialCode", values.materialCode);
     formData.append("description", values.description);
+
     if (selectedMaterial?.materialGroup) {
       formData.append("materialGroup", selectedMaterial.materialGroup);
     }
@@ -128,26 +153,37 @@ export function CreateMaterialRequest({
     if (selectedMaterial?.materialType) {
       formData.append("materialType", selectedMaterial.materialType);
     }
+
     formData.append("qtyReq", values.qtyReq.toString());
     formData.append("uom", values.uom);
     formData.append("purpose", values.purpose);
 
     const res = await saveMaterialRequestAction(null, formData);
 
-    if (res?.error) return toast.error(res.error);
+    if (res?.error) {
+      toast.error(res.error);
+      return;
+    }
 
     setSrCounter((p) => p + 10);
-    form.reset({ ...DEFAULT_FORM_VALUES, materialCode: "", description: "" });
-
-    toast.success(`Saved | Req ${currentReqId}`);
     setNewMaterial(false);
     setSelectedMaterial(null);
+    setQuery("");
     form.reset(DEFAULT_FORM_VALUES);
+
+    toast.success(`Saved | Req ${currentReqId}`);
   };
 
   const handleSave = async () => {
     const valid = await form.trigger();
-    if (!valid) return toast.error("Fix validation errors");
+    if (!valid) {
+      toast.error("Please fix validation errors");
+      return;
+    }
+
+    if (!validateMaterialMatch()) {
+      return;
+    }
 
     const values = form.getValues();
 
@@ -162,6 +198,7 @@ export function CreateMaterialRequest({
     formData.append("srNo", srCounter.toString());
     formData.append("materialCode", values.materialCode);
     formData.append("description", values.description);
+
     if (selectedMaterial?.materialGroup) {
       formData.append("materialGroup", selectedMaterial.materialGroup);
     }
@@ -169,24 +206,27 @@ export function CreateMaterialRequest({
     if (selectedMaterial?.materialType) {
       formData.append("materialType", selectedMaterial.materialType);
     }
+
     formData.append("qtyReq", values.qtyReq.toString());
     formData.append("uom", values.uom);
     formData.append("purpose", values.purpose);
 
     const res = await saveMaterialRequestAction(null, formData);
 
-    if (res?.error) return toast.error(res.error);
+    if (res?.error) {
+      toast.error(res.error);
+      return;
+    }
 
     setReqId(null);
     setSrCounter(10);
-    setOpen(false);
-    form.reset(DEFAULT_FORM_VALUES);
-
-    toast.success("Material Request Submitted");
     setNewMaterial(false);
     setSelectedMaterial(null);
+    setQuery("");
     form.reset(DEFAULT_FORM_VALUES);
     setOpen(false);
+
+    toast.success("Material Request Submitted");
   };
 
   return (
@@ -195,11 +235,24 @@ export function CreateMaterialRequest({
         <Button>Create Material Request</Button>
       </DialogTrigger>
 
-      <DialogContent className="mx-auto px-2 py-4">
+      <DialogContent
+        className="
+          w-full max-w-md
+          mx-auto
+
+          bottom-0 sm:top-1/2
+          sm:-translate-y-1/2
+
+          max-h-[90dvh]
+          overflow-y-auto
+
+          px-3 py-4
+        "
+      >
         <DialogHeader>
           <DialogTitle>Create Material Request</DialogTitle>
         </DialogHeader>
-        <ScrollArea className=" rounded-none px-4">
+        <ScrollArea className="rounded-none px-4">
           <Form {...form}>
             <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
               <MaterialCodeSearchField
@@ -224,13 +277,34 @@ export function CreateMaterialRequest({
                         />
                       ) : (
                         <SearchDescription
+                          query={field.value || query}
+                          setQuery={(val) => {
+                            setQuery(val);
+                            form.setValue("description", val, {
+                              shouldValidate: true,
+                            });
+                          }}
                           filteredOptions={filteredOptions}
-                          query={query}
-                          setQuery={setQuery}
-                          value={field.value}
-                          onValueChange={(val) => {
-                            field.onChange(val);
-                            handleDescriptionChange(val);
+                          selectedOption={selectedMaterial}
+                          setSelectedOption={(material) => {
+                            setSelectedMaterial(material);
+
+                            if (material) {
+                              form.setValue(
+                                "description",
+                                material.materialDescription,
+                                { shouldValidate: true },
+                              );
+                              form.setValue(
+                                "materialCode",
+                                material.materialCode || "",
+                              );
+                              form.setValue("uom", material.uom || "");
+                            } else {
+                              // Manual edit → invalidate material code and uom
+                              form.setValue("materialCode", "");
+                              form.setValue("uom", "");
+                            }
                           }}
                         />
                       )}

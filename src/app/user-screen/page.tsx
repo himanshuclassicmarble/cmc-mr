@@ -6,7 +6,7 @@ export default async function Page() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-4">
         <h1 className="text-xl font-bold tracking-tight text-foreground">
           User Management
         </h1>

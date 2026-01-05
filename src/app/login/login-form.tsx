@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useActionState } from "react";
 
 import { loginSchema, type LoginSchema } from "./schema";
-import { loginAction } from "./action";
+import { loginAction, type LoginState } from "./action";
 
 import {
   Form,
@@ -19,9 +19,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function LoginForm() {
-  const [state, formAction, isPending] = useActionState(loginAction, {
-    error: null,
-  });
+  const [state, formAction, isPending] = useActionState<LoginState, FormData>(
+    loginAction,
+    { error: null },
+  );
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -62,7 +63,7 @@ export default function LoginForm() {
           )}
         />
 
-        {state?.error && (
+        {state.error && (
           <p className="text-sm text-destructive text-center">{state.error}</p>
         )}
 

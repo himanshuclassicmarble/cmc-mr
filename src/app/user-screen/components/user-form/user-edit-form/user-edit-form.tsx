@@ -72,7 +72,20 @@ export default function UserEditForm({ userData }: UserEditFormProps) {
           <Pencil />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md w-full">
+      <DialogContent
+        className="
+          w-full max-w-md
+          mx-auto
+
+          bottom-0 sm:top-1/2
+          sm:-translate-y-1/2
+
+          max-h-[90dvh]
+          overflow-y-auto
+
+          px-3 py-4
+        "
+      >
         <DialogHeader>
           <DialogTitle className="text-left">Edit User</DialogTitle>
         </DialogHeader>

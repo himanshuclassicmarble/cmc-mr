@@ -31,13 +31,14 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ChevronLeft, ChevronRight, Columns3, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { MaterialRateValues } from "../mr-request-forms/schema";
 import { statusConst } from "../mr-request-forms/constants";
-import { useDebounce } from "@/hooks/useDebouncer";
 import { CreateMaterialRequest } from "../mr-request-forms/create-material-request/create-material-request";
 import { MaterialOption } from "../mr-request-forms/types";
-import { getCurrentProfile } from "@/lib/data/current-profile";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { formatDate } from "@/lib/utils/iso-date-formatter";
 
 interface MRRequestProps {
   data: MaterialRateValues[];
@@ -58,7 +59,6 @@ export default function MRRequestTable({
     React.useState<VisibilityState>({});
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
-  const debouncedQuery = useDebounce(setSorting, 1000);
   const table = useReactTable({
     data,
     columns,
@@ -68,7 +68,7 @@ export default function MRRequestTable({
       columnFilters,
       columnVisibility,
     },
-    onSortingChange: debouncedQuery,
+    onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
@@ -77,11 +77,64 @@ export default function MRRequestTable({
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+
   const activeStatus: string =
     (columnFilters.find((f) => f.id === "status")?.value as string) || "All";
 
+  const handleExportXlsx = () => {
+    const rows = table.getFilteredRowModel().rows;
+
+    if (!rows.length) return;
+
+    const exportData = rows.map((row) => {
+      const r = row.original;
+
+      return {
+        "Req ID": r.reqId,
+        "SR No": r.srNo,
+        "Material Code": r.materialCode,
+        Description: r.description,
+        "Material Group": r.materialGroup,
+        "Material Type": r.materialType,
+        "Qty Requested": r.qtyReq,
+        "Qty Approved": r.qtyApproved ?? "",
+        "Qty Issued": r.qtyIssued ?? "",
+        UOM: r.uom,
+        Purpose: r.purpose,
+        Status: r.status,
+
+        "Created Date": r.createdDate ? formatDate(r.createdDate) : "",
+        "Created By": r.createdBy,
+
+        "Approved Date": r.approvalDate ? formatDate(r.approvalDate) : "",
+        "Approved By": r.approvedBy ?? "",
+
+        "Rejected Date": r.rejectedDate ? formatDate(r.rejectedDate) : "",
+        "Rejected By": r.rejectedBy ?? "",
+        "Reject Reason": r.rejectReason ?? "",
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "MR Requests");
+
+    const buffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(blob, `material-requests-${Date.now()}.xlsx`);
+  };
+
   return (
     <div className="space-y-4">
+      {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full">
         <div className="flex-1 max-w-sm">
           <Input
@@ -92,6 +145,7 @@ export default function MRRequestTable({
         </div>
 
         <div className="flex flex-row gap-2">
+          {/* Status Filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
@@ -133,9 +187,11 @@ export default function MRRequestTable({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button variant="outline" onClick={handleExportXlsx}>
+            Export XLSX
+          </Button>
+          <CreateMaterialRequest materialOption={materialMaster} />
         </div>
-
-        <CreateMaterialRequest materialOption={materialMaster} />
       </div>
 
       {/* Table */}
@@ -201,7 +257,7 @@ export default function MRRequestTable({
 
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row items-center justify-between pt-2 border-t">
-        <div className="text-sm">
+        <div className="text-sm text-muted-foreground">
           Page {table.getState().pagination.pageIndex + 1} of{" "}
           {table.getPageCount()}
         </div>

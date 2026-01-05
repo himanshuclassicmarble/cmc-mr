@@ -37,10 +37,12 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { updateMRApprovalAction } from "./action";
 import { Value } from "@radix-ui/react-select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const MRRequestApproval = ({
   data,
   isAuthorised,
+  isDisabled,
 }: MRRequestApprovalProps) => {
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -139,125 +141,144 @@ export const MRRequestApproval = ({
   return (
     <>
       <Drawer open={isMainDialogOpen} onOpenChange={setIsMainDialogOpen}>
-        <DrawerTrigger asChild onClick={handleBadgeClick}>
+        <DrawerTrigger
+          asChild
+          onClick={handleBadgeClick}
+          disabled={isDisabled || !isAuthorised}
+          className="disabled:cursor-not-allowed"
+        >
           <Badge
             className={`w-28 px-2 py-1 rounded-full text-xs font-medium uppercase ${
-              isAuthorised ? "cursor-pointer" : "cursor-default opacity-80"
+              isDisabled || !isAuthorised
+                ? "pointer-events-none"
+                : "cursor-pointer"
             } ${statusColor}`}
           >
             {status}
           </Badge>
         </DrawerTrigger>
         {isAuthorised && (
-          <DrawerContent className="lg:w-4xl mx-auto">
-            <DrawerHeader>
-              <DrawerTitle>Material Request Details</DrawerTitle>
-            </DrawerHeader>
-            <Separator orientation="horizontal" className="m-2" />
+          <DrawerContent className="lg:w-4xl md:w-xl w-sm mx-auto">
+            <ScrollArea
+              className="
+                h-[500px]
+                landscape:h-[300px]
+                sm:h-[500px]
+                md:h-[500px]
+                border-b border-white
+              "
+            >
+              <DrawerHeader>
+                <DrawerTitle>Material Request Details</DrawerTitle>
+              </DrawerHeader>
+              <Separator orientation="horizontal" className="m-2" />
 
-            <div className="space-y-3 py-2 text-sm px-4">
-              {[
-                ["Request ID:", data.reqId],
-                ["SR No:", data.srNo],
-                ["Material Code:", data.materialCode],
-                ["Description:", data.description],
-                ["Purpose:", data.purpose],
-                ["Requested By:", data.createdBy],
-              ].map(([label, value]) => (
-                <div key={label} className="grid grid-cols-3 gap-2">
-                  <span className="font-medium text-muted-foreground">
-                    {label}
-                  </span>
-                  <span className="col-span-2">{value}</span>
-                </div>
-              ))}
-            </div>
+              <div className="space-y-3 py-2 text-sm px-4">
+                {[
+                  ["Request ID:", data.reqId],
+                  ["SR No:", data.srNo],
+                  ["Material Code:", data.materialCode],
+                  ["Description:", data.description],
+                  ["Purpose:", data.purpose],
+                  ["Requested By:", data.createdBy],
+                ].map(([label, value]) => (
+                  <div key={label} className="grid grid-cols-3 gap-2">
+                    <span className="font-medium text-muted-foreground">
+                      {label}
+                    </span>
+                    <span className="col-span-2">{value}</span>
+                  </div>
+                ))}
+              </div>
 
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleApprove)}
-                className="space-y-4 px-4 pb-4"
-              >
-                <div className="flex flex-row gap-2">
-                  <FormField
-                    control={form.control}
-                    name="qtyReq"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Quantity Requested</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} readOnly disabled />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleApprove)}
+                  className="space-y-4 px-4 pb-4"
+                >
+                  <div className="flex flex-row gap-2">
+                    <FormField
+                      control={form.control}
+                      name="qtyReq"
+                      render={({ field }) => (
+                        <FormItem className="w-full">
+                          <FormLabel>Quantity Requested</FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} readOnly disabled />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="qtyApproved"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Quantity Approved</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={0}
-                            max={qtyReq}
-                            disabled={!isAuthorised}
-                            value={field.value ?? 0}
-                            onChange={(e) => {
-                              const value =
-                                e.target.value === ""
-                                  ? null
-                                  : e.target.valueAsNumber;
+                    <FormField
+                      control={form.control}
+                      name="qtyApproved"
+                      render={({ field }) => (
+                        <FormItem className="w-full">
+                          <FormLabel>Quantity Approved</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={0}
+                              max={qtyReq}
+                              disabled={!isAuthorised}
+                              value={field.value ?? 0}
+                              onChange={(e) => {
+                                const value =
+                                  e.target.value === ""
+                                    ? null
+                                    : e.target.valueAsNumber;
 
-                              if (value === null) {
-                                field.onChange(null);
-                                return;
-                              }
+                                if (value === null) {
+                                  field.onChange(null);
+                                  return;
+                                }
 
-                              // ⛔ hard guard
-                              if (value > qtyReq) {
-                                field.onChange(qtyReq);
-                              } else if (value < 0) {
-                                field.onChange(0);
-                              } else {
-                                field.onChange(value);
-                              }
-                            }}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                                if (value > qtyReq) {
+                                  field.onChange(qtyReq);
+                                } else if (value < 0) {
+                                  field.onChange(0);
+                                } else {
+                                  field.onChange(value);
+                                }
+                              }}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                {/* Footer Buttons */}
-                <DrawerFooter className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-4">
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={!isAuthorised} // UI Visual feedback
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={handleRejectClick} // Protected click handler
-                    className="w-full"
-                    disabled={!isAuthorised} // UI Visual feedback
-                  >
-                    Reject
-                  </Button>
-                  <DrawerClose asChild>
-                    <Button type="button" variant="outline" className="w-full">
-                      Cancel
+                  <DrawerFooter className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-4">
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={!isAuthorised}
+                    >
+                      Approve
                     </Button>
-                  </DrawerClose>
-                </DrawerFooter>
-              </form>
-            </Form>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={handleRejectClick}
+                      className="w-full"
+                      disabled={!isAuthorised}
+                    >
+                      Reject
+                    </Button>
+                    <DrawerClose asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                      >
+                        Cancel
+                      </Button>
+                    </DrawerClose>
+                  </DrawerFooter>
+                </form>
+              </Form>
+            </ScrollArea>
           </DrawerContent>
         )}
       </Drawer>
