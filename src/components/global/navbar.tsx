@@ -48,20 +48,20 @@ function NavigationControls() {
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8"
         onClick={() => router.back()}
+        className="size-8"
         aria-label="Go back"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="size-6" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8"
+        className="size-8"
         onClick={() => router.forward()}
         aria-label="Go forward"
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="size-6" />
       </Button>
     </div>
   );
@@ -198,7 +198,7 @@ function MobileNav() {
 export default function Navbar({ user }: { user: UserFormSchema }) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="w-full px-3 sm:px-4 mx-auto h-14 sm:h-16 flex justify-between items-center gap-2">
+      <div className="w-full px-4 sm:px-4 mx-auto h-16 sm:h-16 flex justify-between items-center gap-3">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
           <MobileNav />
 
@@ -211,7 +211,6 @@ export default function Navbar({ user }: { user: UserFormSchema }) {
               className="
                 relative flex items-center justify-center
                 rounded-xs
-                bg-white text-primary-foreground
                 p-1.5
               "
             >
@@ -222,8 +221,10 @@ export default function Navbar({ user }: { user: UserFormSchema }) {
                 height={100}
                 priority
                 className="
-                  h-6 w-16
+                p-0.5
+                  h-8 w-20
                   object-contain
+                  bg-white
                   transition-transform duration-300
                   group-hover:rotate-1
                 "
@@ -239,9 +240,6 @@ export default function Navbar({ user }: { user: UserFormSchema }) {
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-          <div className="hidden sm:block">
-            <NavigationControls />
-          </div>
           <div className="flex items-center pr-1.5 sm:pr-2 mr-1.5 sm:mr-2 border-r border-border gap-1.5 sm:gap-2">
             <ModeToggle />
           </div>

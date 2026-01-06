@@ -40,6 +40,7 @@ import { formFieldsSchema } from "../schema";
 import { SearchDescription } from "../_sub-components/search-description";
 import { materialGroups, materialTypes, unitOfMeasurement } from "../constants";
 import { updateMaterialRequestAction } from "./action";
+import { Spinner } from "@/components/ui/spinner";
 
 export function EditMaterialRequest({
   data,
@@ -50,6 +51,7 @@ export function EditMaterialRequest({
   const [query, setQuery] = useState<string>("");
   const [selectedMaterial, setSelectedMaterial] =
     useState<MaterialOption | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormFields>({
     resolver: zodResolver(formFieldsSchema),
@@ -65,7 +67,7 @@ export function EditMaterialRequest({
     mode: "onBlur",
   });
 
-  const debounced = useDebounce(query, 400);
+  const debounced = useDebounce(query, 1000);
   const [filteredOptions, setFilteredOptions] = useState<MaterialOption[]>([]);
 
   useEffect(() => {
@@ -105,7 +107,7 @@ export function EditMaterialRequest({
         setNewMaterial(false);
       } else {
         setSelectedMaterial(null);
-        setNewMaterial(true);
+        setNewMaterial(data.materialCode === "0");
       }
     }
   }, [open, data, form, materialOption]);
@@ -127,6 +129,7 @@ export function EditMaterialRequest({
   const validateMaterialMatch = (): boolean => {
     const values = form.getValues();
 
+    // For new materials (materialCode = "0"), allow save
     if (newMaterial && values.materialCode === "0") {
       if (!values.materialGroup || !values.materialType) {
         toast.error("Please select material group and type for new materials");
@@ -135,11 +138,13 @@ export function EditMaterialRequest({
       return true;
     }
 
+    // For existing materials, ensure they match
     if (!selectedMaterial) {
       toast.error("Please select a valid material from the list");
       return false;
     }
 
+    // Verify material code and description match the selected material
     if (
       values.materialCode !== selectedMaterial.materialCode ||
       values.description !== selectedMaterial.materialDescription
@@ -154,38 +159,48 @@ export function EditMaterialRequest({
   };
 
   const handleSave = async () => {
-    const valid = await form.trigger();
-    if (!valid) {
-      toast.error("Please fix validation errors");
-      return;
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const valid = await form.trigger();
+      if (!valid) {
+        toast.error("Please fix validation errors");
+        return;
+      }
+
+      if (!validateMaterialMatch()) {
+        return;
+      }
+
+      const values = form.getValues();
+
+      const formData = new FormData();
+      formData.append("reqId", data.reqId);
+      formData.append("srNo", data.srNo.toString());
+      formData.append("materialCode", values.materialCode);
+      formData.append("description", values.description);
+      formData.append("materialGroup", values.materialGroup || "");
+      formData.append("materialType", values.materialType || "");
+      formData.append("qtyReq", values.qtyReq.toString());
+      formData.append("uom", values.uom);
+      formData.append("purpose", values.purpose);
+
+      const res = await updateMaterialRequestAction(null, formData);
+
+      if (res?.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      toast.success("Material request updated successfully");
+      handleDialogClose();
+    } catch (err) {
+      toast.error("Something went wrong while updating");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    if (!validateMaterialMatch()) {
-      return;
-    }
-
-    const values = form.getValues();
-
-    const formData = new FormData();
-    formData.append("reqId", data.reqId);
-    formData.append("srNo", data.srNo.toString());
-    formData.append("materialCode", values.materialCode);
-    formData.append("description", values.description);
-    formData.append("materialGroup", values.materialGroup || "");
-    formData.append("materialType", values.materialType || "");
-    formData.append("qtyReq", values.qtyReq.toString());
-    formData.append("uom", values.uom);
-    formData.append("purpose", values.purpose);
-
-    const res = await updateMaterialRequestAction(null, formData);
-
-    if (res?.error) {
-      toast.error(res.error);
-      return;
-    }
-
-    toast.success("Material request updated successfully");
-    handleDialogClose();
   };
 
   const handleDialogClose = () => {
@@ -206,31 +221,23 @@ export function EditMaterialRequest({
 
       <DialogContent
         className="
-          w-full max-w-md
-          mx-auto
-
-          bottom-0 sm:top-1/2
-          sm:-translate-y-1/2
-
-          max-h-[90dvh]
-          overflow-y-auto
-
-          px-3 py-4
+          w-full mx-auto px-3 py-4
         "
       >
         <DialogHeader>
           <DialogTitle>Edit Material Request</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="px-2">
+        <ScrollArea className="rounded-none px-4">
           <Form {...form}>
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-2" onSubmit={(e) => e.preventDefault()}>
               {/* Material Code Search */}
               <MaterialCodeSearchField
                 name="materialCode"
                 materialOptions={materialOption}
                 setNewMaterial={setNewMaterial}
                 onMaterialFound={handleMaterialFound}
+                disabled={selectedMaterial !== null && !newMaterial}
               />
 
               {/* Description */}
@@ -242,10 +249,12 @@ export function EditMaterialRequest({
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       {newMaterial ? (
-                        <Input placeholder="Enter description" {...field} />
+                        <Input
+                          placeholder="Enter material description"
+                          {...field}
+                        />
                       ) : (
                         <SearchDescription
-                          filteredOptions={filteredOptions}
                           query={field.value || query}
                           setQuery={(val) => {
                             setQuery(val);
@@ -253,12 +262,12 @@ export function EditMaterialRequest({
                               shouldValidate: true,
                             });
                           }}
+                          filteredOptions={filteredOptions}
                           selectedOption={selectedMaterial}
                           setSelectedOption={(material) => {
                             setSelectedMaterial(material);
 
                             if (material) {
-                              // Autofill all fields
                               form.setValue(
                                 "description",
                                 material.materialDescription,
@@ -278,7 +287,7 @@ export function EditMaterialRequest({
                                 material.materialType || "",
                               );
                             } else {
-                              // Manual edit → invalidate all dependent fields
+                              // Manual edit → invalidate material code and related fields
                               form.setValue("materialCode", "");
                               form.setValue("uom", "");
                               form.setValue("materialGroup", "");
@@ -307,7 +316,7 @@ export function EditMaterialRequest({
                             value={field.value}
                             onValueChange={field.onChange}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select group" />
                             </SelectTrigger>
                             <SelectContent>
@@ -343,7 +352,7 @@ export function EditMaterialRequest({
                             value={field.value}
                             onValueChange={field.onChange}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -379,8 +388,8 @@ export function EditMaterialRequest({
                       <FormControl>
                         <Input
                           type="number"
-                          min={0}
                           placeholder="0"
+                          min="0"
                           {...field}
                           onChange={(e) =>
                             field.onChange(e.target.valueAsNumber || 0)
@@ -396,7 +405,7 @@ export function EditMaterialRequest({
                   control={form.control}
                   name="uom"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="w-full">
                       <FormLabel>Unit</FormLabel>
                       <FormControl>
                         {newMaterial ? (
@@ -404,13 +413,13 @@ export function EditMaterialRequest({
                             value={field.value}
                             onValueChange={field.onChange}
                           >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select UOM" />
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select Unit" />
                             </SelectTrigger>
                             <SelectContent>
-                              {unitOfMeasurement.map((u) => (
-                                <SelectItem key={u} value={u}>
-                                  {u}
+                              {unitOfMeasurement.map((uom) => (
+                                <SelectItem key={uom} value={uom}>
+                                  {uom}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -437,7 +446,10 @@ export function EditMaterialRequest({
                   <FormItem>
                     <FormLabel>Purpose</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter purpose" {...field} />
+                      <Input
+                        placeholder="Enter purpose of request"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -447,15 +459,27 @@ export function EditMaterialRequest({
           </Form>
         </ScrollArea>
 
-        <DialogFooter className="pt-4 flex gap-2 justify-end">
+        <DialogFooter className="mt-2 flex flex-row justify-end gap-2">
           <DialogClose asChild>
-            <Button variant="outline" onClick={handleDialogClose}>
+            <Button type="button" variant="outline" onClick={handleDialogClose}>
               Cancel
             </Button>
           </DialogClose>
 
-          <Button type="button" onClick={handleSave}>
-            Save Changes
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={isSubmitting}
+            className="gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Spinner />
+                Saving…
+              </>
+            ) : (
+              "Save Changes"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

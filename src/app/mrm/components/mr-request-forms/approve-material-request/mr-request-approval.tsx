@@ -22,6 +22,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { FormValues, MRRequestApprovalProps } from "../types";
 import {
@@ -36,8 +37,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { updateMRApprovalAction } from "./action";
-import { Value } from "@radix-ui/react-select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Spinner } from "@/components/ui/spinner";
 
 export const MRRequestApproval = ({
   data,
@@ -47,6 +48,8 @@ export const MRRequestApproval = ({
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [isMainDialogOpen, setIsMainDialogOpen] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   const form = useForm<FormValues>({
     defaultValues: {
@@ -64,7 +67,7 @@ export const MRRequestApproval = ({
       : status === "pending"
         ? "bg-yellow-600 text-yellow-50 hover:bg-yellow-700"
         : status === "rejected"
-          ? "bg-red-600 text-yellow-50 hover:bg-red-700"
+          ? "bg-red-600 text-red-50 hover:bg-red-700"
           : status === "Partially Open"
             ? "bg-blue-800 text-blue-50 hover:bg-blue-900"
             : status === "Open"
@@ -79,30 +82,62 @@ export const MRRequestApproval = ({
     }
   };
 
+  const handleDrawerClose = () => {
+    if (!isApproving && !isRejecting) {
+      form.reset({
+        qtyReq: data.qtyReq ?? 0,
+        qtyApproved: data.qtyReq ?? 0,
+      });
+      setIsMainDialogOpen(false);
+    }
+  };
+
   const handleApprove = async (values: FormValues) => {
     if (!isAuthorised) {
       toast.error("You are not authorised. Only HOD or Admin can approve.");
       return;
     }
 
-    const approvalDate = new Date().toISOString();
-    const formData = new FormData();
-    formData.append("reqId", data.reqId);
-    formData.append("srNo", data.srNo.toString());
-    formData.append("status", "approved");
-    formData.append("qtyReq", values.qtyReq.toString());
-    formData.append("qtyApproved", values.qtyApproved?.toString() ?? "");
-    formData.append("approvalDate", approvalDate);
+    if (isApproving) return;
 
-    const res = await updateMRApprovalAction(null, formData);
-
-    if (res?.error) {
-      toast.error(res.error);
+    // Validation
+    if (!values.qtyApproved || values.qtyApproved <= 0) {
+      toast.error("Please enter a valid quantity to approve");
       return;
     }
 
-    toast.success("Material request approved");
-    setIsMainDialogOpen(false);
+    if (values.qtyApproved > values.qtyReq) {
+      toast.error("Approved quantity cannot exceed requested quantity");
+      return;
+    }
+
+    setIsApproving(true);
+
+    try {
+      const approvalDate = new Date().toISOString();
+      const formData = new FormData();
+      formData.append("reqId", data.reqId);
+      formData.append("srNo", data.srNo.toString());
+      formData.append("status", "approved");
+      formData.append("qtyReq", values.qtyReq.toString());
+      formData.append("qtyApproved", values.qtyApproved?.toString() ?? "");
+      formData.append("approvalDate", approvalDate);
+
+      const res = await updateMRApprovalAction(null, formData);
+
+      if (res?.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      toast.success("Material request approved successfully");
+      form.reset();
+      setIsMainDialogOpen(false);
+    } catch (error) {
+      toast.error("Failed to approve request. Please try again.");
+    } finally {
+      setIsApproving(false);
+    }
   };
 
   const handleRejectClick = () => {
@@ -115,42 +150,66 @@ export const MRRequestApproval = ({
 
   const handleRejectConfirm = async () => {
     if (!isAuthorised) return;
+    if (isRejecting) return;
 
-    const rejectedDate = new Date().toISOString();
-    const formData = new FormData();
-    formData.append("reqId", data.reqId);
-    formData.append("srNo", data.srNo.toString());
-    formData.append("status", "rejected");
-    formData.append("rejectedDate", rejectedDate);
-    formData.append("rejectReason", rejectReason);
-
-    const res = await updateMRApprovalAction(null, formData);
-
-    if (res?.error) {
-      toast.error(res.error);
+    if (!rejectReason.trim()) {
+      toast.error("Please provide a reason for rejection");
       return;
     }
 
-    toast.success("Material request rejected");
-    setIsRejectDialogOpen(false);
-    setIsMainDialogOpen(false);
-    setRejectReason("");
+    setIsRejecting(true);
+
+    try {
+      const rejectedDate = new Date().toISOString();
+      const formData = new FormData();
+      formData.append("reqId", data.reqId);
+      formData.append("srNo", data.srNo.toString());
+      formData.append("status", "rejected");
+      formData.append("rejectedDate", rejectedDate);
+      formData.append("rejectReason", rejectReason);
+
+      const res = await updateMRApprovalAction(null, formData);
+
+      if (res?.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      toast.success("Material request rejected successfully");
+      setIsRejectDialogOpen(false);
+      setIsMainDialogOpen(false);
+      setRejectReason("");
+      form.reset();
+    } catch (error) {
+      toast.error("Failed to reject request. Please try again.");
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  const handleRejectCancel = () => {
+    if (!isRejecting) {
+      setRejectReason("");
+      setIsRejectDialogOpen(false);
+    }
   };
 
   const qtyReq = form.watch("qtyReq") ?? 0;
+  const isSubmitting = isApproving || isRejecting;
+
   return (
     <>
       <Drawer open={isMainDialogOpen} onOpenChange={setIsMainDialogOpen}>
         <DrawerTrigger
           asChild
           onClick={handleBadgeClick}
-          disabled={isDisabled || !isAuthorised}
+          disabled={isDisabled || !isAuthorised || isSubmitting}
           className="disabled:cursor-not-allowed"
         >
           <Badge
             className={`w-28 px-2 py-1 rounded-full text-xs font-medium uppercase ${
-              isDisabled || !isAuthorised
-                ? "pointer-events-none"
+              isDisabled || !isAuthorised || isSubmitting
+                ? "pointer-events-none opacity-50"
                 : "cursor-pointer"
             } ${statusColor}`}
           >
@@ -158,14 +217,13 @@ export const MRRequestApproval = ({
           </Badge>
         </DrawerTrigger>
         {isAuthorised && (
-          <DrawerContent className="lg:w-4xl md:w-xl w-sm mx-auto">
+          <DrawerContent className="w-full mx-auto px-3 py-4">
             <ScrollArea
               className="
                 h-[500px]
                 landscape:h-[300px]
                 sm:h-[500px]
                 md:h-[500px]
-                border-b border-white
               "
             >
               <DrawerHeader>
@@ -204,8 +262,15 @@ export const MRRequestApproval = ({
                         <FormItem className="w-full">
                           <FormLabel>Quantity Requested</FormLabel>
                           <FormControl>
-                            <Input type="number" {...field} readOnly disabled />
+                            <Input
+                              type="number"
+                              {...field}
+                              readOnly
+                              disabled
+                              className="bg-muted"
+                            />
                           </FormControl>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -221,7 +286,8 @@ export const MRRequestApproval = ({
                               type="number"
                               min={0}
                               max={qtyReq}
-                              disabled={!isAuthorised}
+                              disabled={!isAuthorised || isSubmitting}
+                              placeholder="Enter quantity"
                               value={field.value ?? 0}
                               onChange={(e) => {
                                 const value =
@@ -236,6 +302,9 @@ export const MRRequestApproval = ({
 
                                 if (value > qtyReq) {
                                   field.onChange(qtyReq);
+                                  toast.error(
+                                    "Approved quantity cannot exceed requested quantity",
+                                  );
                                 } else if (value < 0) {
                                   field.onChange(0);
                                 } else {
@@ -244,6 +313,7 @@ export const MRRequestApproval = ({
                               }}
                             />
                           </FormControl>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -252,17 +322,24 @@ export const MRRequestApproval = ({
                   <DrawerFooter className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-4">
                     <Button
                       type="submit"
-                      className="w-full"
-                      disabled={!isAuthorised}
+                      className="w-full gap-2"
+                      disabled={!isAuthorised || isSubmitting}
                     >
-                      Approve
+                      {isApproving ? (
+                        <>
+                          <Spinner />
+                          Approving…
+                        </>
+                      ) : (
+                        "Approve"
+                      )}
                     </Button>
                     <Button
                       type="button"
                       variant="destructive"
                       onClick={handleRejectClick}
                       className="w-full"
-                      disabled={!isAuthorised}
+                      disabled={!isAuthorised || isSubmitting}
                     >
                       Reject
                     </Button>
@@ -271,6 +348,8 @@ export const MRRequestApproval = ({
                         type="button"
                         variant="outline"
                         className="w-full"
+                        onClick={handleDrawerClose}
+                        disabled={isSubmitting}
                       >
                         Cancel
                       </Button>
@@ -302,7 +381,7 @@ export const MRRequestApproval = ({
               htmlFor="reject-reason"
               className="text-sm font-medium leading-none"
             >
-              Reason for Rejection
+              Reason for Rejection *
             </label>
             <Textarea
               id="reject-reason"
@@ -310,19 +389,30 @@ export const MRRequestApproval = ({
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               className="mt-2 min-h-[100px]"
+              disabled={isRejecting}
             />
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setRejectReason("")}>
+            <AlertDialogCancel
+              onClick={handleRejectCancel}
+              disabled={isRejecting}
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRejectConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={!rejectReason.trim()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+              disabled={!rejectReason.trim() || isRejecting}
             >
-              Confirm Rejection
+              {isRejecting ? (
+                <>
+                  <Spinner />
+                  Rejecting…
+                </>
+              ) : (
+                "Confirm Rejection"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

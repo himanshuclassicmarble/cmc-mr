@@ -29,9 +29,17 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  Download,
+  ListFilter,
+  Search,
+} from "lucide-react";
 import { MaterialRateValues } from "../mr-request-forms/schema";
 import { statusConst } from "../mr-request-forms/constants";
 import { CreateMaterialRequest } from "../mr-request-forms/create-material-request/create-material-request";
@@ -39,6 +47,14 @@ import { MaterialOption } from "../mr-request-forms/types";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { formatDate } from "@/lib/utils/iso-date-formatter";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface MRRequestProps {
   data: MaterialRateValues[];
@@ -134,27 +150,36 @@ export default function MRRequestTable({
 
   return (
     <div className="space-y-4">
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full">
-        <div className="flex-1 max-w-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full pb-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search..."
+            placeholder="Search material requests..."
             value={globalFilter ?? ""}
             onChange={(e) => setGlobalFilter(e.target.value)}
+            className="pl-9 bg-background shadow-sm transition-all focus-visible:ring-primary"
           />
         </div>
 
-        <div className="flex flex-row gap-2">
-          {/* Status Filter */}
+        <div className="flex flex-wrap items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                Status: {activeStatus}
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-2 border-dashed"
+              >
+                <ListFilter className="h-4 w-4" />
+                <span className="hidden sm:inline">Status:</span>
+                <span className="font-semibold text-primary">
+                  {activeStatus}
+                </span>
               </Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Status</DropdownMenuLabel>
+              <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+              <DropdownMenuSeparator />
 
               <DropdownMenuItem
                 onClick={() =>
@@ -162,10 +187,18 @@ export default function MRRequestTable({
                     prev.filter((f) => f.id !== "status"),
                   )
                 }
-                className={`${activeStatus === "All" ? "bg-accent text-accent-foreground" : ""}`}
+                className="cursor-pointer"
               >
-                {activeStatus === "All" && <Check className="mr-2 h-4 w-4" />}
-                All
+                <div className="flex items-center flex-1">
+                  {activeStatus === "All" && (
+                    <Check className="mr-2 h-4 w-4 text-primary" />
+                  )}
+                  <span
+                    className={activeStatus === "All" ? "font-medium" : "ml-6"}
+                  >
+                    All Statuses
+                  </span>
+                </div>
               </DropdownMenuItem>
 
               {statusConst.map((status) => (
@@ -177,24 +210,76 @@ export default function MRRequestTable({
                       { id: "status", value: status },
                     ])
                   }
-                  className={`${activeStatus === status ? "bg-accent text-accent-foreground" : ""}`}
+                  className="cursor-pointer"
                 >
-                  {activeStatus === status && (
-                    <Check className="mr-2 h-4 w-4" />
-                  )}
-                  {status}
+                  <div className="flex items-center flex-1">
+                    {activeStatus === status && (
+                      <Check className="mr-2 h-4 w-4 text-primary" />
+                    )}
+                    <span
+                      className={
+                        activeStatus === status ? "font-medium" : "ml-6"
+                      }
+                    >
+                      {status}
+                    </span>
+                  </div>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" onClick={handleExportXlsx}>
-            Export XLSX
-          </Button>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-2">
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+            </DialogTrigger>
+
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Export Data</DialogTitle>
+                <DialogDescription>
+                  Download the current table data for offline use or reporting.
+                  Export respects applied filters and sorting.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="flex flex-col gap-3 mt-4">
+                <Button
+                  variant="outline"
+                  className="justify-start gap-3 h-10"
+                  onClick={handleExportXlsx}
+                >
+                  <Download className="h-4 w-4" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-sm font-medium">Excel (.xlsx)</span>
+                    <span className="text-xs text-muted-foreground">
+                      Best for analysis and sharing
+                    </span>
+                  </div>
+                </Button>
+
+                {/*
+                <Button variant="outline" disabled className="justify-start gap-3 h-10">
+                  <FileText className="h-4 w-4" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-sm font-medium">CSV</span>
+                    <span className="text-xs text-muted-foreground">
+                      Coming soon
+                    </span>
+                  </div>
+                </Button>
+                */}
+              </div>
+            </DialogContent>
+          </Dialog>
+          <div className="h-6 w-[1px] bg-border mx-1 hidden sm:block" />
+
           <CreateMaterialRequest materialOption={materialMaster} />
         </div>
       </div>
-
-      {/* Table */}
       <ScrollArea className="w-full rounded-md border border-border whitespace-nowrap pb-2">
         <Table>
           <TableHeader>

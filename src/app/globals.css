@@ -114,10 +114,37 @@
 
 @layer base {
     * {
-        font-size: 12px;
+        font-size: 14px;
         @apply border-border outline-ring/50;
+        @media (max-width: 1024px) {
+            font-size: 13px;
+        }
+
+        @media (max-width: 640px) {
+            font-size: 12.5px;
+        }
     }
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+@layer base {
+    :root {
+        font-size: 16px; /* Desktop – enterprise default */
+    }
+
+    /* Tablet */
+    @media (max-width: 1024px) {
+        :root {
+            font-size: 13px;
+        }
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+        :root {
+            font-size: 14px;
+        }
     }
 }

@@ -45,7 +45,6 @@ export async function GET(req: Request) {
       );
     }
 
-    /* 📥 Validate query */
     const { searchParams } = new URL(req.url);
     const parsed = QuerySchema.safeParse(Object.fromEntries(searchParams));
 

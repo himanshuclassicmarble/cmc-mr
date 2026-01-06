@@ -40,6 +40,7 @@ import { useDebounce } from "@/hooks/useDebouncer";
 import { saveMaterialRequestAction } from "./action";
 import { MaterialOption } from "../types";
 import { createReqId } from "./get-req-id-action";
+import { Spinner } from "@/components/ui/spinner";
 
 interface MaterialRequestProps {
   materialOption: MaterialOption[];
@@ -64,6 +65,8 @@ export function CreateMaterialRequest({
   const [query, setQuery] = useState<string>("");
   const [filteredOptions, setFilteredOptions] = useState<MaterialOption[]>([]);
   const debounced = useDebounce(query, 1000);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!debounced.trim()) {
@@ -121,112 +124,133 @@ export function CreateMaterialRequest({
   };
 
   const handleSaveAndContinue = async () => {
-    const valid = await form.trigger();
-    if (!valid) {
-      toast.error("Please fix validation errors");
-      return;
+    if (isSaving) return;
+
+    setIsSaving(true);
+
+    try {
+      const valid = await form.trigger();
+      if (!valid) {
+        toast.error("Please fix validation errors");
+        return;
+      }
+
+      if (!validateMaterialMatch()) {
+        return;
+      }
+
+      const values = form.getValues();
+
+      let currentReqId = reqId;
+      if (!currentReqId) {
+        currentReqId = await createReqId();
+        setReqId(currentReqId);
+      }
+
+      const formData = new FormData();
+      formData.append("mode", "continue");
+      formData.append("reqId", currentReqId);
+      formData.append("srNo", srCounter.toString());
+      formData.append("materialCode", values.materialCode);
+      formData.append("description", values.description);
+
+      if (selectedMaterial?.materialGroup) {
+        formData.append("materialGroup", selectedMaterial.materialGroup);
+      }
+
+      if (selectedMaterial?.materialType) {
+        formData.append("materialType", selectedMaterial.materialType);
+      }
+
+      formData.append("qtyReq", values.qtyReq.toString());
+      formData.append("uom", values.uom);
+      formData.append("purpose", values.purpose);
+
+      const res = await saveMaterialRequestAction(null, formData);
+
+      if (res?.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      // prepare for next entry
+      setSrCounter((p) => p + 10);
+      setNewMaterial(false);
+      setSelectedMaterial(null);
+      setQuery("");
+      form.reset(DEFAULT_FORM_VALUES);
+
+      toast.success(`Saved • Req ${currentReqId}`);
+    } catch (err) {
+      toast.error("Failed to save material");
+    } finally {
+      setIsSaving(false);
     }
-
-    if (!validateMaterialMatch()) {
-      return;
-    }
-
-    const values = form.getValues();
-
-    let currentReqId = reqId;
-    if (!currentReqId) {
-      currentReqId = await createReqId();
-      setReqId(currentReqId);
-    }
-
-    const formData = new FormData();
-    formData.append("mode", "continue");
-    formData.append("reqId", currentReqId);
-    formData.append("srNo", srCounter.toString());
-    formData.append("materialCode", values.materialCode);
-    formData.append("description", values.description);
-
-    if (selectedMaterial?.materialGroup) {
-      formData.append("materialGroup", selectedMaterial.materialGroup);
-    }
-
-    if (selectedMaterial?.materialType) {
-      formData.append("materialType", selectedMaterial.materialType);
-    }
-
-    formData.append("qtyReq", values.qtyReq.toString());
-    formData.append("uom", values.uom);
-    formData.append("purpose", values.purpose);
-
-    const res = await saveMaterialRequestAction(null, formData);
-
-    if (res?.error) {
-      toast.error(res.error);
-      return;
-    }
-
-    setSrCounter((p) => p + 10);
-    setNewMaterial(false);
-    setSelectedMaterial(null);
-    setQuery("");
-    form.reset(DEFAULT_FORM_VALUES);
-
-    toast.success(`Saved | Req ${currentReqId}`);
   };
 
   const handleSave = async () => {
-    const valid = await form.trigger();
-    if (!valid) {
-      toast.error("Please fix validation errors");
-      return;
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const valid = await form.trigger();
+      if (!valid) {
+        toast.error("Please fix validation errors");
+        return;
+      }
+
+      if (!validateMaterialMatch()) {
+        return;
+      }
+
+      const values = form.getValues();
+
+      let currentReqId = reqId;
+      if (!currentReqId) {
+        currentReqId = await createReqId();
+      }
+
+      const formData = new FormData();
+      formData.append("mode", "final");
+      formData.append("reqId", currentReqId);
+      formData.append("srNo", srCounter.toString());
+      formData.append("materialCode", values.materialCode);
+      formData.append("description", values.description);
+
+      if (selectedMaterial?.materialGroup) {
+        formData.append("materialGroup", selectedMaterial.materialGroup);
+      }
+
+      if (selectedMaterial?.materialType) {
+        formData.append("materialType", selectedMaterial.materialType);
+      }
+
+      formData.append("qtyReq", values.qtyReq.toString());
+      formData.append("uom", values.uom);
+      formData.append("purpose", values.purpose);
+
+      const res = await saveMaterialRequestAction(null, formData);
+
+      if (res?.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      setReqId(null);
+      setSrCounter(10);
+      setNewMaterial(false);
+      setSelectedMaterial(null);
+      setQuery("");
+      form.reset(DEFAULT_FORM_VALUES);
+      setOpen(false);
+
+      toast.success("Material Request Submitted");
+    } catch (err) {
+      toast.error("Something went wrong while submitting");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    if (!validateMaterialMatch()) {
-      return;
-    }
-
-    const values = form.getValues();
-
-    let currentReqId = reqId;
-    if (!currentReqId) {
-      currentReqId = await createReqId();
-    }
-
-    const formData = new FormData();
-    formData.append("mode", "final");
-    formData.append("reqId", currentReqId);
-    formData.append("srNo", srCounter.toString());
-    formData.append("materialCode", values.materialCode);
-    formData.append("description", values.description);
-
-    if (selectedMaterial?.materialGroup) {
-      formData.append("materialGroup", selectedMaterial.materialGroup);
-    }
-
-    if (selectedMaterial?.materialType) {
-      formData.append("materialType", selectedMaterial.materialType);
-    }
-
-    formData.append("qtyReq", values.qtyReq.toString());
-    formData.append("uom", values.uom);
-    formData.append("purpose", values.purpose);
-
-    const res = await saveMaterialRequestAction(null, formData);
-
-    if (res?.error) {
-      toast.error(res.error);
-      return;
-    }
-
-    setReqId(null);
-    setSrCounter(10);
-    setNewMaterial(false);
-    setSelectedMaterial(null);
-    setQuery("");
-    form.reset(DEFAULT_FORM_VALUES);
-    setOpen(false);
-
-    toast.success("Material Request Submitted");
   };
 
   return (
@@ -237,16 +261,7 @@ export function CreateMaterialRequest({
 
       <DialogContent
         className="
-          w-full max-w-md
-          mx-auto
-
-          bottom-0 sm:top-1/2
-          sm:-translate-y-1/2
-
-          max-h-[90dvh]
-          overflow-y-auto
-
-          px-3 py-4
+          w-full mx-auto px-3 py-4
         "
       >
         <DialogHeader>
@@ -403,11 +418,33 @@ export function CreateMaterialRequest({
                 Cancel
               </Button>
             </DialogClose>
-            <Button variant="destructive" onClick={handleSaveAndContinue}>
-              Save & Continue
+            <Button
+              disabled={isSaving}
+              className="gap-2"
+              onClick={handleSaveAndContinue}
+            >
+              {isSaving ? (
+                <>
+                  <Spinner />
+                  Adding…
+                </>
+              ) : (
+                "Save & Continue"
+              )}
             </Button>
-            <Button type="button" onClick={handleSave}>
-              Save
+            <Button
+              disabled={isSubmitting}
+              className="gap-2"
+              onClick={handleSave}
+            >
+              {isSubmitting ? (
+                <>
+                  <Spinner />
+                  Saving…
+                </>
+              ) : (
+                "Save"
+              )}
             </Button>
           </DialogFooter>
         </ScrollArea>

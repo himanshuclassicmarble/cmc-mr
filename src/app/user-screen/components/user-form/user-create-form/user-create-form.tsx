@@ -34,6 +34,7 @@ import { departmentConst, plantConst, roleConst } from "../../constants";
 import { Switch } from "@/components/ui/switch";
 import { useActionState, useEffect } from "react";
 import { createUserAndProfileAction } from "./action";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function UserCreateForm() {
   const form = useForm<UserFormSchema>({
@@ -70,16 +71,7 @@ export default function UserCreateForm() {
       </DialogTrigger>
       <DialogContent
         className="
-          w-full max-w-md
-          mx-auto
-
-          bottom-0 sm:top-1/2
-          sm:-translate-y-1/2
-
-          max-h-[90dvh]
-          overflow-y-auto
-
-          px-3 py-4
+          w-full mx-auto px-3 py-4
         "
       >
         <DialogHeader>
@@ -277,14 +269,19 @@ export default function UserCreateForm() {
             </div>
             {/* Buttons */}
             <DialogFooter className="flex flex-col sm:flex-row gap-2">
-              <Button type="submit" className="md:w-40">
-                Save
-              </Button>
               <DialogClose asChild>
                 <Button className="md:w-40" variant="outline">
                   Cancel
                 </Button>
               </DialogClose>
+              <Button
+                type="submit"
+                className="md:w-40 gap-2"
+                disabled={pending}
+              >
+                {pending && <Spinner />}
+                <span>{pending ? "Saving…" : "Save"}</span>
+              </Button>
             </DialogFooter>
           </form>
         </Form>

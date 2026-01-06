@@ -27,26 +27,30 @@ export async function proxy(request: NextRequest) {
     return updateSession(request);
   }
 
+  // Fetch user
   const user = await getCurrentProfile();
   if (!user) {
     return NextResponse.redirect(new URL("/login", origin));
   }
 
-  const role = user.role;
+  const { role, isActive } = user;
 
+  // HARD BLOCK: inactive users
+  if (!isActive) {
+    return NextResponse.redirect(new URL("/unauthorized", origin));
+  }
+
+  // Admin bypass (active admin)
   if (role === "admin") {
     return updateSession(request);
   }
 
+  // Role-based route check
   const allowedRoutes = ALLOWED_ROUTES_BY_ROLE[role] ?? [];
 
   const isAllowed = allowedRoutes.some((route) => {
-    if (route === "/" && pathname === "/") {
-      return true;
-    }
-    if (route !== "/" && pathname.startsWith(route)) {
-      return true;
-    }
+    if (route === "/" && pathname === "/") return true;
+    if (route !== "/" && pathname.startsWith(route)) return true;
     return false;
   });
 

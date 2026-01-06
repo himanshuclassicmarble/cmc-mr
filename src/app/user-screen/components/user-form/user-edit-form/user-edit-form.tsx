@@ -36,6 +36,7 @@ import { Switch } from "@/components/ui/switch";
 import { Pencil } from "lucide-react";
 import { useActionState, useEffect } from "react";
 import { updateProfileAction } from "./action";
+import { Spinner } from "@/components/ui/spinner";
 
 type UserEditFormProps = {
   userData: z.infer<typeof formSchema>;
@@ -74,16 +75,7 @@ export default function UserEditForm({ userData }: UserEditFormProps) {
       </DialogTrigger>
       <DialogContent
         className="
-          w-full max-w-md
-          mx-auto
-
-          bottom-0 sm:top-1/2
-          sm:-translate-y-1/2
-
-          max-h-[90dvh]
-          overflow-y-auto
-
-          px-3 py-4
+          w-full mx-auto px-3 py-4
         "
       >
         <DialogHeader>
@@ -279,8 +271,13 @@ export default function UserEditForm({ userData }: UserEditFormProps) {
             </div>
 
             <DialogFooter className="flex flex-col sm:flex-row gap-2">
-              <Button type="submit" className="md:w-40">
-                Save
+              <Button
+                type="submit"
+                className="md:w-40 gap-2"
+                disabled={pending}
+              >
+                {pending && <Spinner />}
+                <span>{pending ? "Saving…" : "Save"}</span>
               </Button>
               <DialogClose asChild>
                 <Button className="md:w-40" variant="outline">

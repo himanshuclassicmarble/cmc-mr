@@ -52,13 +52,6 @@ export const getMaterialMasterColumns = (): ColumnDef<MRMasterSchema>[] => [
     cell: ({ row }) => (
       <div className="flex gap-2">
         <MREditForm rowData={row.original} rowIndex={row.index} />
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => console.log("Delete:", row.original.materialCode)}
-        >
-          <Trash />
-        </Button>
       </div>
     ),
   },
