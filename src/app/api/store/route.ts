@@ -78,7 +78,11 @@ export async function GET(req: Request) {
         approval_date,
         approved_by,
         department,
-        created_at
+        created_at,
+        created_by,
+        plant,
+        updated_at
+
       `,
         { count: "exact" },
       )
@@ -102,21 +106,57 @@ export async function GET(req: Request) {
 
     const transformedData =
       data?.map((row) => ({
-        request_id: `${row.req_id}-${row.sr_no}`,
-        req_id: row.req_id,
-        sr_no: row.sr_no,
-        material_code: row.material_code,
-        description: row.description,
-        material_group: row.material_group,
-        material_type: row.material_type,
-        qty_req: row.qty_req,
-        qty_approved: row.qty_approved,
-        uom: row.uom,
-        purpose: row.purpose,
-        approval_date: row.approval_date,
-        approved_by: row.approved_by,
-        department: row.department,
-        status: "Open",
+        /* ---------------- METADATA ---------------- */
+        metadata: {
+          id: `${row.req_id}-${row.sr_no}`,
+          requestId: row.req_id,
+          serialNo: row.sr_no,
+          status: "Open",
+          createdAt: row.created_at,
+          updatedAt: row.updated_at ?? null,
+        },
+
+        /* ---------------- MATERIAL ---------------- */
+        material: {
+          code: row.material_code,
+          description: row.description,
+          group: row.material_group,
+          type: row.material_type,
+          uom: row.uom,
+        },
+
+        /* ---------------- INVENTORY ---------------- */
+        inventory: {
+          requestedQty: Number(row.qty_req) || 0,
+          approvedQty: Number(row.qty_approved) || 0,
+          unitOfMeasure: row.uom,
+        },
+
+        /* ---------------- LOGISTICS ---------------- */
+        logistics: {
+          purpose: row.purpose,
+          department: row.department,
+          plant: row.plant,
+        },
+
+        /* ---------------- WORKFLOW ---------------- */
+        workflow: {
+          currentStatus: "Open",
+
+          steps: {
+            request: {
+              user: row.created_by,
+              timestamp: row.created_at,
+            },
+
+            approval: row.approved_by
+              ? {
+                  user: row.approved_by,
+                  timestamp: row.approval_date,
+                }
+              : null,
+          },
+        },
       })) ?? [];
 
     return NextResponse.json({

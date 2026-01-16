@@ -3,9 +3,9 @@ import { updateSession } from "@/lib/supabase/proxy";
 import { getCurrentProfile } from "@/lib/data/current-profile";
 
 const ALLOWED_ROUTES_BY_ROLE: Record<string, string[]> = {
-  user: ["/", "/mrm", "/profile"],
-  hod: ["/", "/mrm", "/material-master", "/profile"],
-  store: ["/", "/material-master", "/mrm", "/profile"],
+  user: ["/", "/mrm", "/profile", "/vendor-form"],
+  hod: ["/", "/mrm", "/material-master", "/profile", "/vendor-form"],
+  store: ["/", "/material-master", "/mrm", "/profile", "/vendor-form"],
 };
 
 const PUBLIC_ROUTES = ["/login", "/unauthorized"];
@@ -15,7 +15,9 @@ export async function proxy(request: NextRequest) {
 
   if (
     pathname.startsWith("/api/issue-callback") ||
-    pathname.startsWith("/api/store")
+    pathname.startsWith("/api/store") ||
+    pathname.startsWith("/api/sync-materials") ||
+    pathname.startsWith("/api/vendor-form")
   ) {
     return NextResponse.next();
   }
@@ -50,6 +52,12 @@ export async function proxy(request: NextRequest) {
 
   const isAllowed = allowedRoutes.some((route) => {
     if (route === "/" && pathname === "/") return true;
+    if (route === "/vendor-form") {
+      // Allow /vendor-form and all nested paths like /vendor-form/[token]
+      return (
+        pathname === "/vendor-form" || pathname.startsWith("/vendor-form/")
+      );
+    }
     if (route !== "/" && pathname.startsWith(route)) return true;
     return false;
   });

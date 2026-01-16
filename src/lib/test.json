@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "id": "MR26000002-10",
+    "requestId": "MR26000002",
+    "serialNo": 10,
+    "status": "Open",
+    "createdAt": "2026-01-13T12:39:15.293783+00:00",
+    "updatedAt": "2026-01-13T12:39:23.567091+00:00"
+  },
+  "material": {
+    "code": "000000000070001986",
+    "description": "SM-MOTOR-ROTAR-SHAFT-45X588MM",
+    "group": "SM",
+    "type": "UNBW",
+    "uom": "NOS"
+  },
+  "inventory": {
+    "requestedQty": 4,
+    "approvedQty": 4,
+    "unitOfMeasure": "NOS"
+  },
+  "logistics": {
+    "purpose": "some purpose-2 ",
+    "department": "it",
+    "plant": "1100"
+  },
+  "workflow": {
+    "currentStatus": "Open",
+    "steps": {
+      "request": {
+        "user": "himanshu.vishwakarma@classicmarble.com",
+        "timestamp": "2026-01-13T12:39:15.293783+00:00"
+      },
+      "approval": {
+        "user": "himanshu.vishwakarma@classicmarble.com",
+        "timestamp": "2026-01-13T12:39:22.605+00:00"
+      }
+    }
+  }
+}
