@@ -5,6 +5,7 @@ import { getCurrentProfile } from "@/lib/data/current-profile";
 
 const MRM = async () => {
   const materialRequestData = await getMaterialRequest();
+  console.log(materialRequestData);
   const materialMaster = await getMaterialMaster();
   const currentProfile = await getCurrentProfile();
 

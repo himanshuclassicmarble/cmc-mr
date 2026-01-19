@@ -274,7 +274,6 @@ export const MRRequestApproval = ({
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="qtyApproved"
@@ -288,10 +287,16 @@ export const MRRequestApproval = ({
                               max={qtyReq}
                               disabled={!isAuthorised || isSubmitting}
                               placeholder="Enter quantity"
-                              value={field.value ?? 0}
+                              // FIX: Change this to allow an empty string so the placeholder shows
+                              value={
+                                field.value === 0 || field.value === null
+                                  ? ""
+                                  : field.value
+                              }
                               onChange={(e) => {
+                                const valString = e.target.value;
                                 const value =
-                                  e.target.value === ""
+                                  valString === ""
                                     ? null
                                     : e.target.valueAsNumber;
 

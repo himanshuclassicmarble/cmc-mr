@@ -1,8 +1,6 @@
 import { Card } from "@/components/ui/card";
 
 import CreateLinkButton from "./components/create-link-button";
-import LinkTable from "./components/link-table";
-import { linkColumns } from "./components/link-table-column";
 
 import { getCurrentProfile } from "@/lib/data/current-profile";
 import { getLinkTable } from "@/lib/data/link-table";

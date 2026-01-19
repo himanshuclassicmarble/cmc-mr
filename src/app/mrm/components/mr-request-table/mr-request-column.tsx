@@ -1,87 +1,94 @@
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, Column } from "@tanstack/react-table";
+import { ArrowUp, ArrowDown, ArrowUpDown, PenOff } from "lucide-react";
 import { MaterialRateValues } from "../mr-request-forms/schema";
 import { MaterialMaster } from "@/app/material-master/types";
-import { ArrowDown, ArrowUp, PenOff } from "lucide-react";
-import { Column } from "@tanstack/react-table";
 import { EditMaterialRequest } from "../mr-request-forms/edit-material-request/edit-material-request";
 import { MRRequestApproval } from "../mr-request-forms/approve-material-request/mr-request-approval";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils/iso-date-formatter";
 
-export const sortHeader = <T,>(title: string, column: Column<T>) => (
-  <div
+const SortableHeader = ({
+  title,
+  column,
+}: {
+  title: string;
+  column: Column<MaterialRateValues>;
+}) => (
+  <Button
+    variant="ghost"
     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-    className="cursor-pointer flex items-center gap-1 select-none"
+    className="h-auto p-0 font-medium hover:bg-transparent -ml-4"
   >
     {title}
     {column.getIsSorted() === "asc" ? (
-      <ArrowUp className="h-3 w-3" />
+      <ArrowUp className="ml-2 h-4 w-4" />
     ) : column.getIsSorted() === "desc" ? (
-      <ArrowDown className="h-3 w-3" />
+      <ArrowDown className="ml-2 h-4 w-4" />
     ) : (
-      <ArrowUp className="h-3 w-3 opacity-20" />
+      <ArrowUpDown className="ml-2 h-4 w-4 opacity-30" />
     )}
-  </div>
+  </Button>
 );
 
 export const getMRRequestColumns = (
-  materialOption: MaterialMaster[],
+  materialOptions: MaterialMaster[],
   isAuthorised: boolean,
   currentUserEmail?: string,
 ): ColumnDef<MaterialRateValues>[] => [
+  // Actions Column
   {
     id: "actions",
     header: "Act.",
+    enableSorting: false,
+    enableHiding: false,
+    size: 60,
+    meta: { align: "center" },
     cell: ({ row }) => {
-      const isRowOwner = row.original.createdBy === currentUserEmail;
-      const isAccessible = row.original.status === "pending";
+      const { original } = row;
+      const isOwner = original.createdBy === currentUserEmail;
+      const canEdit = original.status === "pending" && isOwner;
 
-      if (isRowOwner && isAccessible) {
-        return (
-          <EditMaterialRequest
-            key={`${row.original.reqId}-${row.original.srNo}`}
-            data={row.original}
-            materialOption={materialOption}
-          />
-        );
-      }
-
-      return (
-        <Button variant="ghost" disabled>
+      return canEdit ? (
+        <EditMaterialRequest
+          key={`${original.reqId}-${original.srNo}`}
+          data={original}
+          materialOption={materialOptions}
+        />
+      ) : (
+        <Button variant="ghost" size="icon" disabled className="h-8 w-8">
           <PenOff className="h-4 w-4 text-muted-foreground" />
         </Button>
       );
     },
-    enableSorting: false,
-    enableColumnFilter: false,
   },
 
+  // Common sortable columns
   {
     accessorKey: "reqId",
-    enableSorting: true,
-    header: ({ column }) => sortHeader("Req ID", column),
+    header: ({ column }) => <SortableHeader title="Req ID" column={column} />,
   },
-
   {
     accessorKey: "srNo",
-    enableSorting: true,
-    header: ({ column }) => sortHeader("SR No", column),
+    header: ({ column }) => <SortableHeader title="SR No" column={column} />,
   },
-
   {
     accessorKey: "materialCode",
-    enableSorting: true,
-    header: ({ column }) => sortHeader("MR Code", column),
+    header: ({ column }) => <SortableHeader title="MR Code" column={column} />,
   },
 
+  // Description (filterable)
   {
     accessorKey: "description",
     header: "Description",
     filterFn: "includesString",
+    size: 300,
   },
+
+  // Status with approval component
   {
     accessorKey: "status",
     header: "Status",
+    filterFn: "equalsString",
     cell: ({ row }) => {
       const restrictedStatuses = [
         "approved",
@@ -89,9 +96,7 @@ export const getMRRequestColumns = (
         "closed",
         "partially open",
       ];
-
       const isRestricted = restrictedStatuses.includes(row.original.status);
-
       return (
         <MRRequestApproval
           isAuthorised={isAuthorised}
@@ -100,93 +105,79 @@ export const getMRRequestColumns = (
         />
       );
     },
-    filterFn: (row, columnId, filterValue) =>
-      String(row.getValue(columnId)).toLowerCase() ===
-      String(filterValue).toLowerCase(),
   },
+
+  // Material Group & Type (filterable)
   {
     accessorKey: "materialGroup",
     header: "MR Group",
     filterFn: "includesString",
+    size: 120,
   },
-
   {
     accessorKey: "materialType",
     header: "MR Type",
     filterFn: "includesString",
+    size: 100,
   },
 
+  // Quantities (sortable)
   {
     accessorKey: "qtyReq",
-    enableSorting: true,
-    header: ({ column }) => sortHeader("Qty Req", column),
+    header: ({ column }) => <SortableHeader title="Qty Req" column={column} />,
+    size: 90,
   },
-
   {
     accessorKey: "qtyApproved",
-    enableSorting: true,
-    header: ({ column }) => sortHeader("Qty Appr", column),
+    header: ({ column }) => <SortableHeader title="Qty Appr" column={column} />,
+    size: 90,
   },
-
   {
     accessorKey: "qtyIssued",
-    enableSorting: true,
-    header: ({ column }) => sortHeader("Qty Iss", column),
-  },
-  {
-    accessorKey: "uom",
-    header: "UOM",
-    filterFn: "includesString",
+    header: ({ column }) => <SortableHeader title="Qty Iss" column={column} />,
+    size: 90,
   },
 
+  // UOM & Purpose
+  { accessorKey: "uom", header: "UOM", filterFn: "includesString", size: 80 },
   {
     accessorKey: "purpose",
     header: "Purpose",
     filterFn: "includesString",
+    size: 250,
   },
 
+  // Dates (formatted)
   {
     accessorKey: "createdDate",
     header: "Crdt. Date",
-    enableColumnFilter: false,
     cell: ({ getValue }) => formatDate(getValue() as string),
+    enableColumnFilter: false,
   },
-
-  {
-    accessorKey: "createdBy",
-    header: "Crtd. By",
-    filterFn: "includesString",
-  },
-
   {
     accessorKey: "approvalDate",
     header: "Appr. Date",
+    cell: ({ getValue }) =>
+      getValue() ? formatDate(getValue() as string) : "-",
     enableColumnFilter: false,
-    cell: ({ getValue }) => formatDate(getValue() as string),
   },
-
-  {
-    accessorKey: "approvedBy",
-    header: "Appr By",
-    filterFn: "includesString",
-  },
-
   {
     accessorKey: "rejectedDate",
-    header: "Rej, Dt",
+    header: "Rej. Date",
+    cell: ({ getValue }) =>
+      getValue() ? formatDate(getValue() as string) : "-",
     enableColumnFilter: false,
-    cell: ({ getValue }) => formatDate(getValue() as string),
   },
 
-  {
-    accessorKey: "rejectedBy",
-    header: "Rej. by",
-    filterFn: "includesString",
-  },
-
+  // Users & Reason
+  { accessorKey: "createdBy", header: "Crtd. By", filterFn: "includesString" },
+  { accessorKey: "approvedBy", header: "Appr By", filterFn: "includesString" },
+  { accessorKey: "rejectedBy", header: "Rej. By", filterFn: "includesString" },
   {
     accessorKey: "rejectReason",
-    header: "Rej. Rs.",
+    header: "Rej. Reason",
     filterFn: "includesString",
+    size: 200,
+    cell: ({ getValue }) => getValue() || "-",
   },
 ];

@@ -340,11 +340,16 @@ export function CreateMaterialRequest({
                         <Input
                           type="number"
                           placeholder="0"
-                          min="0"
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(e.target.valueAsNumber || 0)
-                          }
+                          // 1. Convert 0 to empty string so placeholder shows up
+                          // 2. Prevent "020" by ensuring the display value is clean
+                          value={field.value === 0 ? "" : field.value}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            // 3. If input is empty, set to 0 (or null if your schema allows)
+                            // 4. Use parseInt to ensure we store a clean number
+                            field.onChange(val === "" ? 0 : parseInt(val, 10));
+                          }}
                         />
                       </FormControl>
                       <FormMessage />

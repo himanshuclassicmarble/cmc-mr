@@ -391,9 +391,15 @@ export function EditMaterialRequest({
                           placeholder="0"
                           min="0"
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(e.target.valueAsNumber || 0)
-                          }
+                          // Fix 1: Display empty string if the value is 0 or undefined
+                          // This allows the placeholder to show and prevents "020"
+                          value={field.value === 0 ? "" : field.value}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            // Fix 2: If the user clears the input, set state to 0
+                            // Otherwise, convert the string input to a proper number
+                            field.onChange(val === "" ? 0 : Number(val));
+                          }}
                         />
                       </FormControl>
                       <FormMessage />

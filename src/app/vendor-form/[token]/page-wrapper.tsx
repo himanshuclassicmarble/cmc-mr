@@ -100,6 +100,16 @@ export default function PageWrapper({ token, linkData }: PageWrapperProps) {
     }
   };
 
+  // Add this helper function at the top of your component or in a separate utils file
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleSubmit = () => {
     if (currentStep === 0) {
       vendorRef.current?.submit();
@@ -128,35 +138,78 @@ export default function PageWrapper({ token, linkData }: PageWrapperProps) {
     setIsSubmitting(true);
 
     try {
+      // Helper to safely get file - handles both File objects and arrays
+      const getFile = (value: any) => {
+        if (!value) return null;
+        // If it's an array, get first item
+        if (Array.isArray(value)) return value[0] || null;
+        // If it's a File object, return it directly
+        if (value instanceof File) return value;
+        return null;
+      };
+
+      // 🔍 DEBUG
+      console.log("govtForm structure:", govtForm);
+      console.log("bankDetails structure:", bankDetails);
+
+      // Convert all files to base64
+      const panFile = getFile(govtForm.panFile);
+      const tanFile = getFile(govtForm.tanFile);
+      const gstFile = getFile(govtForm.gstFile);
+      const msmeFile = getFile(govtForm.msmeFile);
+      const chequeFile = getFile(bankDetails.cancelcheque);
+
+      console.log("Files found:", {
+        panFile: !!panFile,
+        tanFile: !!tanFile,
+        gstFile: !!gstFile,
+        msmeFile: !!msmeFile,
+        chequeFile: !!chequeFile,
+      });
+
+      const govtDataWithFiles = {
+        ...govtForm,
+        panFile: panFile ? await fileToBase64(panFile) : null,
+        tanFile: tanFile ? await fileToBase64(tanFile) : null,
+        gstFile: gstFile ? await fileToBase64(gstFile) : null,
+        msmeFile: msmeFile ? await fileToBase64(msmeFile) : null,
+      };
+
+      const bankDataWithFiles = {
+        accountno: bankDetails.accountno,
+        ifsccode: bankDetails.ifsccode,
+        accounttype: bankDetails.accounttype,
+        bankname: bankDetails.bankname,
+        branch: bankDetails.branch,
+        digit: bankDetails.digit,
+        cancelledCheque: chequeFile ? await fileToBase64(chequeFile) : null,
+      };
+
       // Log the data being sent for debugging
       console.log("Submitting data:", {
         token,
         vendorData: vendor,
-        govtData: govtForm,
-        bankData: bankDetails,
+        govtData: govtDataWithFiles,
+        bankData: bankDataWithFiles,
       });
 
-      const response = await fetch(`/api/vendor-form/submit`, {
+      const response = await fetch("/api/vendor-form/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           token,
           vendorData: vendor,
-          govtData: govtForm,
-          bankData: bankDetails,
+          govtData: govtDataWithFiles,
+          bankData: bankDataWithFiles,
         }),
       });
 
       const result = await response.json();
-
       console.log("API Response:", result);
 
       if (response.ok) {
         toast.success("Application submitted successfully!");
-
-        // Optionally redirect to a thank you page
         setTimeout(() => {
-          // window.location.href = "/vendor-form/thank-you";
           alert("Form submitted successfully! You can close this page.");
         }, 1500);
       } else {
@@ -175,7 +228,6 @@ export default function PageWrapper({ token, linkData }: PageWrapperProps) {
 
   const getStepStatus = (stepIndex: number) => {
     const stepKey = STEPS[stepIndex].key;
-
     if (stepKey === "preview") {
       return stepStatus.vendor === "completed" &&
         stepStatus.govt === "completed" &&
@@ -183,7 +235,6 @@ export default function PageWrapper({ token, linkData }: PageWrapperProps) {
         ? "completed"
         : "incomplete";
     }
-
     return stepStatus[stepKey as keyof typeof stepStatus];
   };
 

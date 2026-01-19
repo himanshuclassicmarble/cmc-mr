@@ -1,95 +1,154 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs"; // ✅ REQUIRED
+
+// -------------------- helpers --------------------
+
+function getContentType(fileName: string): string {
+  const ext = fileName.toLowerCase().split(".").pop();
+  const map: Record<string, string> = {
+    pdf: "application/pdf",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+  };
+  return map[ext || ""] || "application/octet-stream";
+}
+
+function getFileExtension(file: any) {
+  if (file?.name) return file.name.split(".").pop();
+  return "pdf";
+}
+
+async function uploadFile(
+  supabase: any,
+  token: string,
+  file: any,
+  fileName: string,
+): Promise<{ path: string; publicUrl: string }> {
+  let buffer: Buffer;
+
+  if (typeof file === "string") {
+    const base64 = file.includes(",") ? file.split(",")[1] : file;
+    buffer = Buffer.from(base64, "base64");
+  } else if (file instanceof Blob) {
+    buffer = Buffer.from(await file.arrayBuffer());
+  } else if (Buffer.isBuffer(file)) {
+    buffer = file;
+  } else if (file?.data) {
+    buffer = Buffer.from(file.data);
+  } else {
+    throw new Error("Unsupported file format");
+  }
+
+  if (!buffer.length) {
+    throw new Error("Empty file buffer");
+  }
+
+  const path = `${token}/${fileName}`;
+
+  const { error } = await supabase.storage
+    .from("vendor-documents")
+    .upload(path, buffer, {
+      contentType: getContentType(fileName),
+      upsert: true, // ✅ important
+    });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from("vendor-documents").getPublicUrl(path);
+
+  return { path, publicUrl: data.publicUrl };
+}
+
+// -------------------- API --------------------
+
 export async function POST(request: NextRequest) {
+  const supabase = await createSupabaseServerClient();
+  const uploadedPaths: string[] = [];
+
   try {
-    const supabase = await createSupabaseServerClient();
     const body = await request.json();
-
-    console.log("Received submission request for token:", body.token);
-
     const { token, vendorData, govtData, bankData } = body;
 
-    // More detailed validation
-    if (!token) {
-      console.error("Missing token in request");
-      return NextResponse.json({ error: "Missing token" }, { status: 400 });
-    }
-
-    if (!vendorData) {
-      console.error("Missing vendorData in request");
+    if (!token || !vendorData || !govtData || !bankData) {
       return NextResponse.json(
-        { error: "Missing vendor data" },
+        { error: "Invalid request payload" },
         { status: 400 },
       );
     }
 
-    if (!govtData) {
-      console.error("Missing govtData in request");
-      return NextResponse.json(
-        { error: "Missing government compliance data" },
-        { status: 400 },
-      );
-    }
-
-    if (!bankData) {
-      console.error("Missing bankData in request");
-      return NextResponse.json(
-        { error: "Missing bank details" },
-        { status: 400 },
-      );
-    }
-
-    console.log("All data present, fetching link data...");
-
-    // First, get the link data from vendor_form_links
-    const { data: linkData, error: linkError } = await supabase
+    // -------------------- validate token --------------------
+    const { data: link, error: linkError } = await supabase
       .from("vendor_form_links")
       .select("*")
       .eq("token", token)
       .single();
 
-    if (linkError || !linkData) {
-      console.error("Link fetch error:", linkError);
+    if (linkError || !link || link.status !== "active") {
       return NextResponse.json(
-        { error: "Invalid or expired token" },
-        { status: 404 },
-      );
-    }
-
-    console.log("Link data found:", linkData);
-
-    // Check if link is still active
-    if (linkData.status !== "active") {
-      console.error("Link is not active, current status:", linkData.status);
-      return NextResponse.json(
-        { error: "This form link is no longer active" },
+        { error: "Invalid or expired link" },
         { status: 403 },
       );
     }
 
-    // Check if already submitted
-    const { data: existingSubmission } = await supabase
-      .from("vendor_submission")
-      .select("token")
-      .eq("token", token)
-      .single();
+    // -------------------- upload files FIRST --------------------
+    const pan = govtData.panFile
+      ? await uploadFile(
+          supabase,
+          token,
+          govtData.panFile,
+          `pan.${getFileExtension(govtData.panFile)}`,
+        )
+      : null;
+    if (pan) uploadedPaths.push(pan.path);
 
-    if (existingSubmission) {
-      console.error("Form already submitted for this token");
-      return NextResponse.json(
-        { error: "Form already submitted" },
-        { status: 409 },
-      );
-    }
+    const tan = govtData.tanFile
+      ? await uploadFile(
+          supabase,
+          token,
+          govtData.tanFile,
+          `tan.${getFileExtension(govtData.tanFile)}`,
+        )
+      : null;
+    if (tan) uploadedPaths.push(tan.path);
 
-    console.log("Preparing submission data...");
+    const gst = govtData.gstFile
+      ? await uploadFile(
+          supabase,
+          token,
+          govtData.gstFile,
+          `gst.${getFileExtension(govtData.gstFile)}`,
+        )
+      : null;
+    if (gst) uploadedPaths.push(gst.path);
 
-    // Prepare submission data
+    const msme = govtData.msmeFile
+      ? await uploadFile(
+          supabase,
+          token,
+          govtData.msmeFile,
+          `msme.${getFileExtension(govtData.msmeFile)}`,
+        )
+      : null;
+    if (msme) uploadedPaths.push(msme.path);
+
+    const cheque = bankData.cancelledCheque
+      ? await uploadFile(
+          supabase,
+          token,
+          bankData.cancelledCheque,
+          `cancelled_cheque.${getFileExtension(bankData.cancelledCheque)}`,
+        )
+      : null;
+    if (cheque) uploadedPaths.push(cheque.path);
+
+    // -------------------- insert submission --------------------
     const submissionData = {
-      token: token,
+      token,
 
-      // Vendor Details
       vendor_name: vendorData.name,
       constitution: vendorData.constitution,
       status: vendorData.status,
@@ -105,79 +164,60 @@ export async function POST(request: NextRequest) {
       mobile_no: vendorData.mobileno,
       email: vendorData.email,
 
-      // Government Compliance
       pan: govtData.pan,
-      pan_file_url: null, // Will be updated after file upload
+      pan_file_url: pan?.publicUrl || null,
       pan_linked_aadhaar: govtData.panLinkedWithAadhaar,
+
       tan: govtData.tan || null,
-      tan_file_url: null,
+      tan_file_url: tan?.publicUrl || null,
+
       gst_reg_no: govtData.gstregno || null,
-      gst_file_url: null,
+      gst_file_url: gst?.publicUrl || null,
+
       msme_register: govtData.msmeregister,
       msme_reg_no: govtData.msmeregno || null,
-      msme_file_url: null,
-      itr_data: govtData.itr, // Store as JSONB
+      msme_file_url: msme?.publicUrl || null,
 
-      // Bank Details
+      itr_data: govtData.itr,
+
       account_no: bankData.accountno,
       ifsc_code: bankData.ifsccode,
       account_type: bankData.accounttype,
       bank_name: bankData.bankname,
       branch: bankData.branch,
       micr_code: bankData.digit || null,
-      cancelled_cheque_url: null,
+      cancelled_cheque_url: cheque?.publicUrl || null,
 
-      // Metadata from link
-      created_by_email: linkData.created_by_email,
-      department: linkData.department,
-      plant: linkData.plant,
-      emp_code: linkData.emp_code,
+      created_by_email: link.created_by_email,
+      department: link.department,
+      plant: link.plant,
+      emp_code: link.emp_code,
     };
 
-    console.log("Inserting submission data...");
-
-    // Insert into vendor_submission
-    const { data: submission, error: submissionError } = await supabase
+    const { error: insertError } = await supabase
       .from("vendor_submission")
-      .insert(submissionData)
-      .select()
-      .single();
+      .insert(submissionData);
 
-    if (submissionError) {
-      console.error("Submission error:", submissionError);
-      return NextResponse.json(
-        { error: "Failed to submit form", details: submissionError.message },
-        { status: 500 },
-      );
-    }
+    if (insertError) throw insertError;
 
-    console.log("Submission successful, updating link status...");
-
-    // Update vendor_form_links status to 'submitted'
-    const { error: updateError } = await supabase
+    await supabase
       .from("vendor_form_links")
       .update({ status: "submitted" })
       .eq("token", token);
 
-    if (updateError) {
-      console.error("Status update error:", updateError);
-      // Don't fail the request, submission was successful
-    }
-
-    console.log("Form submission complete!");
-
     return NextResponse.json({
       success: true,
       message: "Form submitted successfully",
-      submissionId: submission.token,
     });
-  } catch (error) {
-    console.error("Submission error:", error);
+  } catch (error: any) {
+    console.error("Submission failed, rolling back files:", error?.message);
+
+    if (uploadedPaths.length) {
+      await supabase.storage.from("vendor-documents").remove(uploadedPaths);
+    }
+
     return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Submission failed", details: error?.message },
       { status: 500 },
     );
   }

@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Check, Eye, Share2, Trash2 } from "lucide-react";
+import { Copy, Check, Eye, Share2, Trash2, EyeOffIcon } from "lucide-react";
 import { LinkSchemaType } from "../schema/schema";
 import { Separator } from "@/components/ui/separator";
-import { Value } from "@radix-ui/react-select";
 
 const CopyLinkCell = ({ token }: { token: string }) => {
   const [copied, setCopied] = useState(false);
@@ -77,7 +77,8 @@ export const linkColumns: ColumnDef<LinkSchemaType>[] = [
     id: "actions",
     header: () => <div className="text-center font-semibold">Actions</div>,
     cell: ({ row }) => {
-      const id = row.original.token;
+      const router = useRouter();
+      const token = row.original.token;
 
       return (
         <div className="flex items-center justify-center">
@@ -87,10 +88,16 @@ export const linkColumns: ColumnDef<LinkSchemaType>[] = [
               variant="ghost"
               size="icon"
               className="h-7 w-7 rounded-md hover:bg-background hover:text-blue-600 transition-colors"
-              onClick={() => console.log("View", id)}
+              onClick={() =>
+                router.push(`/vendor-form/link-generator/${token}`)
+              }
               title="View Details"
             >
-              <Eye className="h-4 w-4" />
+              {row.original.status === "submitted" ? (
+                <Eye className="h-4 w-4" />
+              ) : (
+                <EyeOffIcon className="h-4 w-4 text-foreground/50 " />
+              )}
             </Button>
 
             {/* Share Button */}
@@ -98,7 +105,7 @@ export const linkColumns: ColumnDef<LinkSchemaType>[] = [
               variant="ghost"
               size="icon"
               className="h-7 w-7 rounded-md hover:bg-background hover:text-green-600 transition-colors"
-              onClick={() => console.log("Share", id)}
+              onClick={() => console.log("Share", token)}
               title="Share Link"
             >
               <Share2 className="h-4 w-4" />
@@ -111,7 +118,7 @@ export const linkColumns: ColumnDef<LinkSchemaType>[] = [
               variant="ghost"
               size="icon"
               className="h-7 w-7 rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-all"
-              onClick={() => console.log("Delete", id)}
+              onClick={() => console.log("Delete", token)}
               title="Delete"
             >
               <Trash2 className="h-4 w-4" />

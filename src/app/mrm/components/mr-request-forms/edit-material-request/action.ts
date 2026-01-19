@@ -74,7 +74,7 @@ export async function updateMaterialRequestAction(
 
     // 5. Authorization check - only creator or admin/HOD can edit
     const isCreator = existingRequest.created_by === user.email;
-    const isAuthorized = user.role === "HOD" || user.role === "ADMIN";
+    const isAuthorized = user.role === "hod" || user.role === "admin";
 
     if (!isCreator && !isAuthorized) {
       return {
